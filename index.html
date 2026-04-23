@@ -327,10 +327,10 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   </nav>
   <div class="blocked-body">
     <div class="blocked-card">
-      <div class="blocked-icon">🔒</div>
-      <h2>Acesso pendente</h2>
-      <p>Sua conta foi criada com sucesso! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.</p>
-      <div class="pix-box">
+      <div class="blocked-icon" id="blocked-icon-el">🔒</div>
+      <h2 id="blocked-title-el">Acesso pendente</h2>
+      <p id="blocked-desc-el">Sua conta foi criada com sucesso! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.</p>
+      <div class="pix-box" id="blocked-pix-box">
         <h4>💸 Como ativar seu acesso</h4>
         <p>Envie <strong style="color:var(--text)">R$ 15,00</strong> via Pix para a chave:</p>
         <code class="pix-value" id="blocked-pix-display">carregando...</code>
@@ -445,6 +445,7 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
   <div class="modal-box">
     <h3>Editar aluno</h3>
     <input type="hidden" id="edit-user-id">
+    <input type="hidden" id="edit-user-active">
     <div class="form-group" style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome</label>
       <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-name" placeholder="Nome completo">
@@ -453,9 +454,16 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">E-mail</label>
       <input class="modal-input" style="margin-bottom:0" type="email" id="edit-user-email" placeholder="email@exemplo.com">
     </div>
-    <div class="form-group" style="margin-bottom:12px">
+    <div class="form-group" style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nova senha <span style="color:var(--muted2)">(deixe em branco para não alterar)</span></label>
       <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-pass" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Status de acesso</label>
+      <select class="modal-input" style="margin-bottom:0" id="edit-user-status">
+        <option value="true">✅ Ativo — pode acessar o site</option>
+        <option value="false">🚫 Bloqueado — acesso negado</option>
+      </select>
     </div>
     <div class="modal-btns">
       <button onclick="closeEditModal()">Cancelar</button>
@@ -563,6 +571,27 @@ async function doLogin() {
   await initSession(data.user);
 }
 
+async function showBlockedPage(email, reason) {
+  document.getElementById('blocked-email-display').textContent = email;
+  const { data: setting } = await sb.from('settings').select('value').eq('key','pix_key').single();
+  const pixKey = setting?.value || 'Entre em contato com o administrador.';
+
+  if (reason === 'blocked') {
+    document.getElementById('blocked-pix-display').textContent = pixKey;
+    document.getElementById('blocked-icon-el').textContent = '🚫';
+    document.getElementById('blocked-title-el').textContent = 'Acesso bloqueado';
+    document.getElementById('blocked-desc-el').textContent = 'Seu acesso foi suspenso. Entre em contato com o suporte do site para mais informações.';
+    document.getElementById('blocked-pix-box').classList.add('hidden');
+  } else {
+    document.getElementById('blocked-pix-display').textContent = pixKey;
+    document.getElementById('blocked-icon-el').textContent = '🔒';
+    document.getElementById('blocked-title-el').textContent = 'Acesso pendente';
+    document.getElementById('blocked-desc-el').textContent = 'Sua conta foi criada! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.';
+    document.getElementById('blocked-pix-box').classList.remove('hidden');
+  }
+  showPage('blocked');
+}
+
 async function doLogout() {
   await sb.auth.signOut();
   currentUser = null; currentMat = null;
@@ -582,12 +611,15 @@ async function initSession(user) {
     return;
   }
 
-  const { data: profile } = await sb.from('profiles').select('active').eq('id', user.id).single();
+  const { data: profile } = await sb.from('profiles').select('active, blocked').eq('id', user.id).single();
+
+  if (profile?.blocked) {
+    showBlockedPage(user.email, 'blocked');
+    return;
+  }
+
   if (!profile?.active) {
-    document.getElementById('blocked-email-display').textContent = user.email;
-    const { data: setting } = await sb.from('settings').select('value').eq('key','pix_key').single();
-    document.getElementById('blocked-pix-display').textContent = setting?.value || 'Chave não configurada ainda — entre em contato com o administrador.';
-    showPage('blocked');
+    showBlockedPage(user.email, 'pending');
     return;
   }
 
@@ -987,7 +1019,7 @@ async function loadAdminData() {
                 ${p.active ? 'Bloquear' : 'Ativar'}
               </button>
               <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
-                onclick="openEditModal('${p.id}','${(p.name||'').replace(/'/g,"\\'")}','${p.email}')">
+                onclick="openEditModal('${p.id}','${(p.name||'').replace(/'/g,"\\'")}','${p.email}',${p.active})">
                 Editar
               </button>
             </div>`
@@ -1002,11 +1034,12 @@ async function toggleUser(id, currentActive) {
   loadAdminData();
 }
 
-function openEditModal(id, name, email) {
+function openEditModal(id, name, email, active) {
   document.getElementById('edit-user-id').value = id;
   document.getElementById('edit-user-name').value = name;
   document.getElementById('edit-user-email').value = email;
   document.getElementById('edit-user-pass').value = '';
+  document.getElementById('edit-user-status').value = active ? 'true' : 'false';
   document.getElementById('edit-modal-msg').textContent = '';
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(() => document.getElementById('edit-user-name').focus(), 50);
@@ -1017,12 +1050,14 @@ function closeEditModal() {
 }
 
 async function saveEditUser() {
-  const id    = document.getElementById('edit-user-id').value;
-  const name  = document.getElementById('edit-user-name').value.trim();
-  const email = document.getElementById('edit-user-email').value.trim();
-  const pass  = document.getElementById('edit-user-pass').value.trim();
-  const msg   = document.getElementById('edit-modal-msg');
-  const btn   = document.getElementById('btn-save-user');
+  const id      = document.getElementById('edit-user-id').value;
+  const name    = document.getElementById('edit-user-name').value.trim();
+  const email   = document.getElementById('edit-user-email').value.trim();
+  const pass    = document.getElementById('edit-user-pass').value.trim();
+  const active  = document.getElementById('edit-user-status').value === 'true';
+  const blocked = !active;
+  const msg     = document.getElementById('edit-modal-msg');
+  const btn     = document.getElementById('btn-save-user');
 
   if (!name || !email) { msg.style.color = 'var(--danger)'; msg.textContent = 'Nome e e-mail são obrigatórios.'; return; }
   if (pass && pass.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Senha deve ter ao menos 6 caracteres.'; return; }
@@ -1030,11 +1065,7 @@ async function saveEditUser() {
   btn.disabled = true; btn.textContent = 'Salvando...'; msg.textContent = '';
 
   try {
-    await sb.from('profiles').update({ name, email }).eq('id', id);
-    if (pass) {
-      const { error } = await sb.auth.admin.updateUserById(id, { email, password: pass });
-      if (error) throw new Error(error.message);
-    }
+    await sb.from('profiles').update({ name, email, active, blocked }).eq('id', id);
     msg.style.color = 'var(--success)';
     msg.textContent = '✓ Dados atualizados!';
     btn.textContent = '✓ Salvo';
