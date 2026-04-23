@@ -422,14 +422,16 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
       <table class="users-table">
         <thead>
           <tr>
+            <th>#</th>
             <th>Nome / E-mail</th>
+            <th>Tipo</th>
             <th>Cadastro</th>
             <th>Status</th>
-            <th>Ação</th>
+            <th>Ações</th>
           </tr>
         </thead>
         <tbody id="users-tbody">
-          <tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">Carregando...</td></tr>
+          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Carregando...</td></tr>
         </tbody>
       </table>
     </div>
@@ -437,8 +439,31 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 </div>
 
 <!-- ══════════════════════════════
-     MODAL NOVA MATÉRIA
+     MODAL EDITAR ALUNO
 ══════════════════════════════ -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal-box">
+    <h3>Editar aluno</h3>
+    <input type="hidden" id="edit-user-id">
+    <div class="form-group" style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome</label>
+      <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-name" placeholder="Nome completo">
+    </div>
+    <div class="form-group" style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">E-mail</label>
+      <input class="modal-input" style="margin-bottom:0" type="email" id="edit-user-email" placeholder="email@exemplo.com">
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nova senha <span style="color:var(--muted2)">(deixe em branco para não alterar)</span></label>
+      <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-pass" placeholder="Mínimo 6 caracteres">
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeEditModal()">Cancelar</button>
+      <button class="modal-confirm" id="btn-save-user" onclick="saveEditUser()">Salvar</button>
+    </div>
+    <div id="edit-modal-msg" style="font-size:12px;margin-top:8px;text-align:center;min-height:16px"></div>
+  </div>
+</div>
 <div class="modal-bg" id="mat-modal">
   <div class="modal-box">
     <h3>Nova matéria</h3>
@@ -916,7 +941,7 @@ async function avaliar(i) {
 // ADMIN
 // ══════════════════════════════════════
 async function loadAdminData() {
-  const { data: profiles } = await sb.from('profiles').select('*').order('created_at', { ascending: false });
+  const { data: profiles } = await sb.from('profiles').select('*').order('created_at', { ascending: true });
   const { data: setting  } = await sb.from('settings').select('value').eq('key','pix_key').single();
 
   if (setting?.value) document.getElementById('pix-key-field').value = setting.value;
@@ -935,30 +960,90 @@ async function loadAdminData() {
     tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">Nenhum usuário cadastrado ainda</td></tr>';
     return;
   }
-  tbody.innerHTML = profiles.map(p => `
-    <tr>
+  tbody.innerHTML = profiles.map((p, index) => {
+    const isAdmin = p.email === ADMIN_EMAIL;
+    const num = index + 1;
+    return `<tr>
+      <td style="color:var(--muted2);font-size:12px;font-weight:600;font-family:'Syne',sans-serif">#${num}</td>
       <td>
         <div style="font-weight:500">${p.name || '—'}</div>
         <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.email}</div>
       </td>
+      <td>${isAdmin
+        ? '<span class="tag tag-accent">Admin</span>'
+        : '<span class="tag tag-blue">Aluno</span>'
+      }</td>
       <td style="color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
       <td>${p.active
         ? '<span class="tag tag-green">● Ativo</span>'
         : '<span class="tag tag-yellow">● Pendente</span>'
       }</td>
       <td>
-        ${p.email !== ADMIN_EMAIL ? `
-        <button class="toggle-btn ${p.active ? 'toggle-on' : 'toggle-off'}"
-          onclick="toggleUser('${p.id}', ${p.active})">
-          ${p.active ? 'Desativar' : 'Ativar acesso'}
-        </button>` : '<span style="font-size:11px;color:var(--muted2)">admin</span>'}
+        ${isAdmin
+          ? '<span style="font-size:11px;color:var(--muted2)">—</span>'
+          : `<div style="display:flex;gap:6px;align-items:center">
+              <button class="toggle-btn ${p.active ? 'toggle-on' : 'toggle-off'}"
+                onclick="toggleUser('${p.id}', ${p.active})">
+                ${p.active ? 'Bloquear' : 'Ativar'}
+              </button>
+              <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
+                onclick="openEditModal('${p.id}','${(p.name||'').replace(/'/g,"\\'")}','${p.email}')">
+                Editar
+              </button>
+            </div>`
+        }
       </td>
-    </tr>`).join('');
+    </tr>`;
+  }).join('');
 }
 
 async function toggleUser(id, currentActive) {
   await sb.from('profiles').update({ active: !currentActive }).eq('id', id);
   loadAdminData();
+}
+
+function openEditModal(id, name, email) {
+  document.getElementById('edit-user-id').value = id;
+  document.getElementById('edit-user-name').value = name;
+  document.getElementById('edit-user-email').value = email;
+  document.getElementById('edit-user-pass').value = '';
+  document.getElementById('edit-modal-msg').textContent = '';
+  document.getElementById('edit-modal').classList.add('open');
+  setTimeout(() => document.getElementById('edit-user-name').focus(), 50);
+}
+
+function closeEditModal() {
+  document.getElementById('edit-modal').classList.remove('open');
+}
+
+async function saveEditUser() {
+  const id    = document.getElementById('edit-user-id').value;
+  const name  = document.getElementById('edit-user-name').value.trim();
+  const email = document.getElementById('edit-user-email').value.trim();
+  const pass  = document.getElementById('edit-user-pass').value.trim();
+  const msg   = document.getElementById('edit-modal-msg');
+  const btn   = document.getElementById('btn-save-user');
+
+  if (!name || !email) { msg.style.color = 'var(--danger)'; msg.textContent = 'Nome e e-mail são obrigatórios.'; return; }
+  if (pass && pass.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Senha deve ter ao menos 6 caracteres.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Salvando...'; msg.textContent = '';
+
+  try {
+    await sb.from('profiles').update({ name, email }).eq('id', id);
+    if (pass) {
+      const { error } = await sb.auth.admin.updateUserById(id, { email, password: pass });
+      if (error) throw new Error(error.message);
+    }
+    msg.style.color = 'var(--success)';
+    msg.textContent = '✓ Dados atualizados!';
+    btn.textContent = '✓ Salvo';
+    setTimeout(() => { closeEditModal(); loadAdminData(); }, 1200);
+  } catch(e) {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Erro ao salvar: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
 }
 
 async function savePixKey() {
