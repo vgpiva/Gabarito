@@ -1019,7 +1019,11 @@ async function loadAdminData() {
                 ${p.active ? 'Bloquear' : 'Ativar'}
               </button>
               <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
-                onclick="openEditModal('${p.id}','${(p.name||'').replace(/'/g,"\\'")}','${p.email}',${p.active})">
+                data-id="${p.id}"
+                data-name="${(p.name||'').replace(/"/g,'&quot;')}"
+                data-email="${p.email.replace(/"/g,'&quot;')}"
+                data-active="${p.active}"
+                onclick="openEditModalFromBtn(this)">
                 Editar
               </button>
             </div>`
@@ -1032,6 +1036,14 @@ async function loadAdminData() {
 async function toggleUser(id, currentActive) {
   await sb.from('profiles').update({ active: !currentActive }).eq('id', id);
   loadAdminData();
+}
+
+function openEditModalFromBtn(btn) {
+  const id     = btn.getAttribute('data-id');
+  const name   = btn.getAttribute('data-name');
+  const email  = btn.getAttribute('data-email');
+  const active = btn.getAttribute('data-active') === 'true';
+  openEditModal(id, name, email, active);
 }
 
 function openEditModal(id, name, email, active) {
@@ -1053,28 +1065,28 @@ async function saveEditUser() {
   const id      = document.getElementById('edit-user-id').value;
   const name    = document.getElementById('edit-user-name').value.trim();
   const email   = document.getElementById('edit-user-email').value.trim();
-  const pass    = document.getElementById('edit-user-pass').value.trim();
   const active  = document.getElementById('edit-user-status').value === 'true';
   const blocked = !active;
   const msg     = document.getElementById('edit-modal-msg');
   const btn     = document.getElementById('btn-save-user');
 
   if (!name || !email) { msg.style.color = 'var(--danger)'; msg.textContent = 'Nome e e-mail são obrigatórios.'; return; }
-  if (pass && pass.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Senha deve ter ao menos 6 caracteres.'; return; }
 
   btn.disabled = true; btn.textContent = 'Salvando...'; msg.textContent = '';
 
-  try {
-    await sb.from('profiles').update({ name, email, active, blocked }).eq('id', id);
-    msg.style.color = 'var(--success)';
-    msg.textContent = '✓ Dados atualizados!';
-    btn.textContent = '✓ Salvo';
-    setTimeout(() => { closeEditModal(); loadAdminData(); }, 1200);
-  } catch(e) {
+  const { error } = await sb.from('profiles').update({ name, email, active, blocked }).eq('id', id);
+
+  if (error) {
     msg.style.color = 'var(--danger)';
-    msg.textContent = 'Erro ao salvar: ' + e.message;
+    msg.textContent = 'Erro ao salvar: ' + error.message;
     btn.disabled = false; btn.textContent = 'Salvar';
+    return;
   }
+
+  msg.style.color = 'var(--success)';
+  msg.textContent = '✓ Dados atualizados com sucesso!';
+  btn.textContent = '✓ Salvo';
+  setTimeout(() => { closeEditModal(); loadAdminData(); }, 1200);
 }
 
 async function savePixKey() {
