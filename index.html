@@ -238,6 +238,86 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
 .nova-questao-btn{width:100%;padding:9px;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:13px;transition:all .2s}
 .nova-questao-btn:hover{background:var(--surface3)}
 .admin-body{flex:1;padding:2rem;overflow-y:auto;max-width:900px;margin:0 auto;width:100%}
+
+/* ── RESPONSIVE MOBILE ── */
+@media (max-width: 640px) {
+  /* Nav */
+  .topnav{padding:0 1rem;height:50px}
+  .nav-logo{font-size:17px}
+  .nav-email{display:none}
+  .nav-btn{padding:4px 10px;font-size:11px}
+
+  /* Home */
+  .app-home{padding:1.25rem}
+  .welcome-header{margin-bottom:1.25rem}
+  .welcome-header h2{font-size:20px}
+  .materias-grid{grid-template-columns:1fr 1fr;gap:10px}
+  .materia-card{min-height:110px;padding:1rem}
+  .materia-card h3{font-size:13px}
+  .materia-card p{font-size:11px}
+  .materia-card-bottom span{font-size:10px}
+  .add-materia-card{min-height:110px}
+
+  /* Materia header */
+  .materia-header{padding:.75rem 1rem;gap:8px}
+  .materia-header h2{font-size:15px}
+  .materia-header p{display:none}
+  .back-link{padding:4px 8px;font-size:12px}
+
+  /* Tabs */
+  .materia-tabs{padding:0 1rem}
+  .m-tab{padding:8px 12px;font-size:12px}
+
+  /* Materia body */
+  .materia-body{padding:1rem}
+
+  /* Resumos — empilha em mobile */
+  .resumos-layout{grid-template-columns:1fr;gap:10px}
+  .topicos-nav{position:static;max-height:200px;overflow-y:auto}
+  .topico-nav-item{padding:8px 12px;font-size:12px}
+  .topico-content{padding:1rem}
+  .topico-content h3{font-size:15px}
+  .topico-content p{font-size:13px}
+
+  /* Questões — empilha em mobile */
+  .questoes-layout{grid-template-columns:1fr;gap:10px}
+  .diff-pills{flex-direction:row;flex-wrap:wrap}
+  .diff-pill{padding:6px 10px;font-size:12px;flex:1;min-width:fit-content;justify-content:center}
+  .questao-ativa{padding:1rem}
+  .questao-ativa h3{font-size:14px}
+  .resposta-textarea{min-height:100px;font-size:13px}
+  .avaliar-btn{width:100%}
+  .feedback-header{padding:12px}
+  .nota-circle{width:44px;height:44px;font-size:15px}
+
+  /* Admin */
+  .admin-body{padding:1rem}
+  .stats-grid{grid-template-columns:1fr;gap:8px}
+  .stat-value{font-size:24px}
+  .users-table th:nth-child(3),
+  .users-table td:nth-child(3),
+  .users-table th:nth-child(4),
+  .users-table td:nth-child(4){display:none}
+  .toggle-btn{padding:4px 8px;font-size:10px}
+
+  /* Upload */
+  .upload-zone{padding:1rem}
+
+  /* Modal */
+  .modal-box{padding:1.25rem;max-width:100%!important}
+
+  /* Auth */
+  .auth-container{padding:0}
+  .auth-logo{font-size:26px}
+  .auth-card{padding:1.25rem}
+
+  /* Blocked */
+  .blocked-card h2{font-size:20px}
+  .pix-value{font-size:11px}
+
+  /* Color picker */
+  .color-opt{width:24px;height:24px}
+}
 .admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
 .admin-head h2{font-size:22px;font-weight:700}
 .stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
@@ -1140,97 +1220,153 @@ Avalie com critério e justiça. Retorne JSON:
 }
 
 // ADMIN
-async function loadAdminData() {
-  const {data:profiles}=await sb.from('profiles').select('*').order('created_at',{ascending:true});
-  const {data:setting}=await sb.from('settings').select('value').eq('key','pix_key').single();
-  if(setting?.value) document.getElementById('pix-key-field').value=setting.value;
-  const total=profiles?.length||0;
-  const active=profiles?.filter(p=>p.active).length||0;
-  document.getElementById('stat-total').textContent=total;
-  document.getElementById('stat-active').textContent=active;
-  document.getElementById('stat-revenue').textContent=`≈ R$ ${(active*15).toLocaleString('pt-BR')}/mês`;
-  document.getElementById('stat-pending').textContent=total-active;
-  const tbody=document.getElementById('users-tbody');
-  if(!profiles?.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhum usuário ainda</td></tr>';return;}
-  tbody.innerHTML=profiles.map((p,i)=>{
-    const isAdmin=p.email===ADMIN_EMAIL;
-    const statusTag=p.active?'<span class="tag tag-green">● Ativo</span>':p.blocked?'<span class="tag tag-red">● Bloqueado</span>':'<span class="tag tag-yellow">● Pendente</span>';
-    return `<tr>
-      <td style="color:var(--muted2);font-size:12px;font-weight:600;font-family:'Syne',sans-serif">#${i+1}</td>
-      <td><div style="font-weight:500">${p.name||'—'}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${p.email}</div></td>
-      <td>${isAdmin?'<span class="tag tag-accent">Admin</span>':'<span class="tag tag-blue">Aluno</span>'}</td>
-      <td style="color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>${statusTag}</td>
-      <td>${isAdmin?'<span style="font-size:11px;color:var(--muted2)">—</span>':`
-        <div style="display:flex;gap:6px">
-          <button class="toggle-btn ${p.active?'toggle-on':'toggle-off'}" onclick="toggleUser('${p.id}',${p.active})">${p.active?'Bloquear':'Ativar'}</button>
-          <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)" data-id="${p.id}" data-name="${(p.name||'').replace(/"/g,'&quot;')}" data-email="${p.email}" data-active="${p.active}" onclick="openEditModalFromBtn(this)">Editar</button>
-        </div>`}
-      </td>
-    </tr>`;
-  }).join('');
+// Helper para chamar o backend admin
+async function callAdmin(action, payload) {
+  const r = await fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action, payload })
+  });
+  const d = await r.json();
+  if (d.error) throw new Error(d.error);
+  return d;
 }
-async function toggleUser(id,cur) {
-  const nowActive=!cur;
-  await sb.from('profiles').update({active:nowActive,blocked:!nowActive}).eq('id',id);
+
+async function loadAdminData() {
+  const tbody = document.getElementById('users-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Carregando...</td></tr>';
+
+  try {
+    const [{ data: profiles }, { data: settings }] = await Promise.all([
+      callAdmin('listar_usuarios'),
+      callAdmin('get_settings')
+    ]);
+
+    const pixKey = settings?.find(s => s.key === 'pix_key')?.value || '';
+    if (pixKey) document.getElementById('pix-key-field').value = pixKey;
+
+    const total  = profiles?.length || 0;
+    const active = profiles?.filter(p => p.active).length || 0;
+    document.getElementById('stat-total').textContent   = total;
+    document.getElementById('stat-active').textContent  = active;
+    document.getElementById('stat-revenue').textContent = `≈ R$ ${(active*15).toLocaleString('pt-BR')}/mês`;
+    document.getElementById('stat-pending').textContent = total - active;
+
+    if (!profiles?.length) {
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhum usuário ainda</td></tr>';
+      return;
+    }
+
+    tbody.innerHTML = profiles.map((p, i) => {
+      const isAdmin   = p.email === ADMIN_EMAIL;
+      const statusTag = p.active
+        ? '<span class="tag tag-green">● Ativo</span>'
+        : p.blocked
+          ? '<span class="tag tag-red">● Bloqueado</span>'
+          : '<span class="tag tag-yellow">● Pendente</span>';
+      return `<tr>
+        <td style="color:var(--muted2);font-size:12px;font-weight:600;font-family:'Syne',sans-serif">#${i+1}</td>
+        <td><div style="font-weight:500">${p.name||'—'}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${p.email}</div></td>
+        <td>${isAdmin ? '<span class="tag tag-accent">Admin</span>' : '<span class="tag tag-blue">Aluno</span>'}</td>
+        <td style="color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
+        <td>${statusTag}</td>
+        <td>${isAdmin ? '<span style="font-size:11px;color:var(--muted2)">—</span>' : `
+          <div style="display:flex;gap:6px">
+            <button class="toggle-btn ${p.active?'toggle-on':'toggle-off'}" onclick="toggleUser('${p.id}',${p.active})">${p.active?'Bloquear':'Ativar'}</button>
+            <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
+              data-id="${p.id}" data-name="${(p.name||'').replace(/"/g,'&quot;')}"
+              data-email="${p.email}" data-active="${p.active}"
+              onclick="openEditModalFromBtn(this)">Editar</button>
+          </div>`}
+        </td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center;color:var(--danger);padding:2rem">Erro ao carregar: ${e.message}</td></tr>`;
+  }
+}
+
+async function toggleUser(id, cur) {
+  const nowActive = !cur;
+  await callAdmin('atualizar_usuario', { id, active: nowActive, blocked: !nowActive });
   loadAdminData();
 }
+
 function openEditModalFromBtn(btn) {
-  openEditModal(btn.getAttribute('data-id'),btn.getAttribute('data-name'),btn.getAttribute('data-email'),btn.getAttribute('data-active')==='true');
+  openEditModal(
+    btn.getAttribute('data-id'),
+    btn.getAttribute('data-name'),
+    btn.getAttribute('data-email'),
+    btn.getAttribute('data-active') === 'true'
+  );
 }
-function openEditModal(id,name,email,active) {
-  document.getElementById('edit-user-id').value=id;
-  document.getElementById('edit-user-name').value=name;
-  document.getElementById('edit-user-email').value=email;
-  document.getElementById('edit-user-status').value=active?'true':'false';
-  document.getElementById('edit-modal-msg').textContent='';
+
+function openEditModal(id, name, email, active) {
+  document.getElementById('edit-user-id').value    = id;
+  document.getElementById('edit-user-name').value  = name;
+  document.getElementById('edit-user-email').value = email;
+  document.getElementById('edit-user-status').value = active ? 'true' : 'false';
+  document.getElementById('edit-modal-msg').textContent = '';
   document.getElementById('edit-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('edit-user-name').focus(),50);
+  setTimeout(() => document.getElementById('edit-user-name').focus(), 50);
 }
-function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');}
+
+function closeEditModal() { document.getElementById('edit-modal').classList.remove('open'); }
+
 async function saveEditUser() {
-  const id=document.getElementById('edit-user-id').value;
-  const name=document.getElementById('edit-user-name').value.trim();
-  const email=document.getElementById('edit-user-email').value.trim();
-  const active=document.getElementById('edit-user-status').value==='true';
-  const msg=document.getElementById('edit-modal-msg');
-  const btn=document.getElementById('btn-save-user');
-  if(!name||!email){msg.style.color='var(--danger)';msg.textContent='Nome e e-mail são obrigatórios.';return;}
-  btn.disabled=true;btn.textContent='Salvando...';
-  const {error}=await sb.from('profiles').update({name,email,active,blocked:!active}).eq('id',id);
-  if(error){msg.style.color='var(--danger)';msg.textContent='Erro: '+error.message;btn.disabled=false;btn.textContent='Salvar';return;}
-  msg.style.color='var(--success)';msg.textContent='✓ Salvo!';btn.textContent='✓';
-  setTimeout(()=>{closeEditModal();loadAdminData();},1000);
-}
-async function savePixKey() {
-  const val=document.getElementById('pix-key-field').value.trim();
-  if(!val) return;
-  await sb.from('settings').upsert({key:'pix_key',value:val});
-  alert('Chave Pix salva!');
-}
-function openNewUserModal() {
-  ['new-user-name','new-user-email','new-user-pass'].forEach(id=>document.getElementById(id).value='');
-  document.getElementById('user-modal-msg').textContent='';
-  document.getElementById('user-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('new-user-name').focus(),50);
-}
-function closeUserModal(){document.getElementById('user-modal').classList.remove('open');}
-async function createUser() {
-  const name=document.getElementById('new-user-name').value.trim();
-  const email=document.getElementById('new-user-email').value.trim();
-  const pass=document.getElementById('new-user-pass').value.trim();
-  const msg=document.getElementById('user-modal-msg');
-  const btn=document.getElementById('btn-create-user');
-  if(!name||!email||!pass){msg.style.color='var(--danger)';msg.textContent='Preencha todos os campos.';return;}
-  if(pass.length<6){msg.style.color='var(--danger)';msg.textContent='Senha deve ter ao menos 6 caracteres.';return;}
-  btn.disabled=true;btn.textContent='Cadastrando...';msg.textContent='';
+  const id     = document.getElementById('edit-user-id').value;
+  const name   = document.getElementById('edit-user-name').value.trim();
+  const email  = document.getElementById('edit-user-email').value.trim();
+  const active = document.getElementById('edit-user-status').value === 'true';
+  const msg    = document.getElementById('edit-modal-msg');
+  const btn    = document.getElementById('btn-save-user');
+  if (!name || !email) { msg.style.color='var(--danger)'; msg.textContent='Nome e e-mail são obrigatórios.'; return; }
+  btn.disabled = true; btn.textContent = 'Salvando...';
   try {
-    const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
-    if(error) throw new Error(error.message);
-    await sb.from('profiles').upsert({id:data.user.id,email,name,active:true,blocked:false});
-    msg.style.color='var(--success)';msg.textContent='✓ Aluno cadastrado!';btn.textContent='✓';
-    setTimeout(()=>{closeUserModal();loadAdminData();},1500);
-  } catch(e){msg.style.color='var(--danger)';msg.textContent='Erro: '+e.message;btn.disabled=false;btn.textContent='Cadastrar';}
+    await callAdmin('atualizar_usuario', { id, name, email, active, blocked: !active });
+    msg.style.color = 'var(--success)'; msg.textContent = '✓ Salvo!'; btn.textContent = '✓';
+    setTimeout(() => { closeEditModal(); loadAdminData(); }, 1000);
+  } catch(e) {
+    msg.style.color = 'var(--danger)'; msg.textContent = 'Erro: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Salvar';
+  }
+}
+
+async function savePixKey() {
+  const val = document.getElementById('pix-key-field').value.trim();
+  if (!val) return;
+  try {
+    await callAdmin('save_settings', { key: 'pix_key', value: val });
+    alert('Chave Pix salva!');
+  } catch(e) { alert('Erro ao salvar: ' + e.message); }
+}
+
+function openNewUserModal() {
+  ['new-user-name','new-user-email','new-user-pass'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('user-modal-msg').textContent = '';
+  document.getElementById('user-modal').classList.add('open');
+  setTimeout(() => document.getElementById('new-user-name').focus(), 50);
+}
+
+function closeUserModal() { document.getElementById('user-modal').classList.remove('open'); }
+
+async function createUser() {
+  const name  = document.getElementById('new-user-name').value.trim();
+  const email = document.getElementById('new-user-email').value.trim();
+  const pass  = document.getElementById('new-user-pass').value.trim();
+  const msg   = document.getElementById('user-modal-msg');
+  const btn   = document.getElementById('btn-create-user');
+  if (!name||!email||!pass) { msg.style.color='var(--danger)'; msg.textContent='Preencha todos os campos.'; return; }
+  if (pass.length < 6) { msg.style.color='var(--danger)'; msg.textContent='Senha deve ter ao menos 6 caracteres.'; return; }
+  btn.disabled = true; btn.textContent = 'Cadastrando...'; msg.textContent = '';
+  try {
+    await callAdmin('criar_usuario', { name, email, password: pass });
+    msg.style.color = 'var(--success)'; msg.textContent = '✓ Aluno cadastrado!'; btn.textContent = '✓';
+    setTimeout(() => { closeUserModal(); loadAdminData(); }, 1500);
+  } catch(e) {
+    msg.style.color = 'var(--danger)'; msg.textContent = 'Erro: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Cadastrar';
+  }
 }
 </script>
 </body>
