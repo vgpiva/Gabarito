@@ -138,7 +138,105 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
 .dots span:nth-child(2){animation-delay:.2s}
 .dots span:nth-child(3){animation-delay:.4s}
 @keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
-/* ADMIN */
+/* QUESTÕES */
+.q-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:gap}
+.diff-row{display:flex;gap:8px;flex-wrap:wrap}
+.diff-pill{padding:6px 16px;font-size:12px;border:1px solid var(--border2);border-radius:20px;background:transparent;color:var(--muted);transition:all .15s;font-weight:500}
+.diff-pill:hover{color:var(--text)}
+.diff-pill.facil.on{background:var(--success-dim);color:var(--success);border-color:rgba(74,222,128,.25)}
+.diff-pill.medio.on{background:var(--warn-dim);color:var(--warn);border-color:rgba(251,191,36,.25)}
+.diff-pill.dificil.on{background:var(--danger-dim);color:var(--danger);border-color:rgba(248,113,113,.25)}
+.diff-pill.aleatorio.on{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+.nova-q-btn{display:flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent);color:#0a0a0f;border:none;border-radius:var(--r-sm);font-size:13px;font-weight:700;font-family:'Syne',sans-serif;transition:all .2s}
+.nova-q-btn:hover{background:#b8e020}
+.nova-q-btn:disabled{opacity:.5;cursor:not-allowed}
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem;margin-bottom:14px;transition:border-color .2s}
+.q-card-meta{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.q-card-num{font-size:11px;color:var(--muted2);font-weight:500}
+.q-card h3{font-size:15px;font-weight:600;line-height:1.6;margin-bottom:14px;color:var(--text)}
+.q-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:10px 12px;color:var(--text);font-size:13px;resize:vertical;min-height:90px;outline:none;transition:border-color .2s;line-height:1.6}
+.q-textarea:focus{border-color:var(--accent-border)}
+.q-textarea:disabled{opacity:.6;cursor:not-allowed}
+.q-footer{display:flex;align-items:center;justify-content:space-between;margin-top:10px}
+.q-chars{font-size:11px;color:var(--muted2)}
+.q-submit{padding:8px 18px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--r-sm);font-size:13px;font-weight:500;transition:all .2s}
+.q-submit:hover:not(:disabled){background:rgba(200,241,53,.2)}
+.q-submit:disabled{opacity:.5;cursor:not-allowed}
+.feedback-box{margin-top:14px;border-radius:var(--r-sm);padding:1rem 1.25rem;display:none;border:1px solid}
+.feedback-box.show{display:block}
+.feedback-box.acerto{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.2)}
+.feedback-box.erro{background:rgba(248,113,113,.06);border-color:rgba(248,113,113,.2)}
+.feedback-box.parcial{background:rgba(251,191,36,.06);border-color:rgba(251,191,36,.2)}
+.nota-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.nota-badge{font-size:20px;font-weight:800;font-family:'Syne',sans-serif;padding:4px 14px;border-radius:var(--r-sm)}
+.nota-badge.hi{background:var(--success-dim);color:var(--success)}
+.nota-badge.mid{background:var(--warn-dim);color:var(--warn)}
+.nota-badge.lo{background:var(--danger-dim);color:var(--danger)}
+.nota-label{font-size:13px;font-weight:500}
+.feedback-section{margin-bottom:10px}
+.feedback-section:last-child{margin-bottom:0}
+.feedback-section-label{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:5px}
+.feedback-section-label.green{color:var(--success)}
+.feedback-section-label.red{color:var(--danger)}
+.feedback-section-label.blue{color:var(--info)}
+.feedback-section p{font-size:13px;color:var(--muted);line-height:1.7}
+.nova-questao-loading{text-align:center;padding:2rem 0;color:var(--muted);font-size:13px}
+/* QUESTÕES */
+.questoes-layout{display:grid;grid-template-columns:240px 1fr;gap:16px}
+.questoes-sidebar{display:flex;flex-direction:column;gap:10px}
+.questoes-config{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.25rem}
+.questoes-config h4{font-size:13px;font-weight:600;margin-bottom:12px}
+.config-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.diff-pills{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.diff-pill{padding:8px 12px;font-size:13px;border:1px solid var(--border2);border-radius:var(--r-sm);cursor:pointer;background:transparent;color:var(--muted);transition:all .15s;text-align:left;display:flex;align-items:center;gap:8px}
+.diff-pill:hover{color:var(--text);background:var(--surface2)}
+.diff-pill.selected-facil{background:var(--success-dim);color:var(--success);border-color:rgba(74,222,128,.2)}
+.diff-pill.selected-medio{background:var(--warn-dim);color:var(--warn);border-color:rgba(251,191,36,.2)}
+.diff-pill.selected-dificil{background:var(--danger-dim);color:var(--danger);border-color:rgba(248,113,113,.2)}
+.diff-pill.selected-aleatorio{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+.topico-select{width:100%;padding:8px 10px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:13px;outline:none;margin-bottom:14px}
+.topico-select:focus{border-color:var(--accent-border)}
+.gerar-questao-btn{width:100%;padding:10px;background:var(--accent);color:#0a0a0f;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;border:none;border-radius:var(--r-sm);transition:all .2s}
+.gerar-questao-btn:hover:not(:disabled){background:#b8e020;transform:translateY(-1px)}
+.gerar-questao-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.banco-questoes{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden}
+.banco-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:500}
+.questao-item{padding:10px 14px;cursor:pointer;border-bottom:1px solid var(--border);transition:all .15s;display:flex;align-items:flex-start;gap:10px}
+.questao-item:last-child{border-bottom:none}
+.questao-item:hover{background:var(--surface2)}
+.questao-item.ativa{background:var(--accent-dim)}
+.questao-diff-badge{padding:2px 7px;border-radius:10px;font-size:10px;font-weight:600;flex-shrink:0;margin-top:2px}
+.badge-facil{background:var(--success-dim);color:var(--success)}
+.badge-medio{background:var(--warn-dim);color:var(--warn)}
+.badge-dificil{background:var(--danger-dim);color:var(--danger)}
+.questao-item-text{font-size:12px;color:var(--muted);line-height:1.5;flex:1}
+.questao-item.ativa .questao-item-text{color:var(--accent)}
+.questao-ativa{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
+.questao-ativa-meta{font-size:11px;color:var(--muted2);margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.questao-ativa h3{font-size:16px;font-weight:600;line-height:1.6;margin-bottom:1.25rem}
+.resposta-textarea{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);padding:12px 14px;color:var(--text);font-size:14px;resize:vertical;min-height:120px;outline:none;transition:border-color .2s;line-height:1.7}
+.resposta-textarea:focus{border-color:var(--accent-border)}
+.resposta-footer{display:flex;justify-content:flex-end;margin-top:10px}
+.avaliar-btn{padding:9px 20px;background:var(--accent);color:#0a0a0f;font-size:13px;font-weight:700;font-family:'Syne',sans-serif;border:none;border-radius:var(--r-sm);transition:all .2s}
+.avaliar-btn:hover:not(:disabled){background:#b8e020}
+.avaliar-btn:disabled{opacity:.5;cursor:not-allowed}
+.feedback-card{margin-top:1rem;border-radius:var(--r);border:1px solid var(--border);overflow:hidden}
+.feedback-header{padding:14px 16px;display:flex;align-items:center;gap:14px;background:var(--surface2)}
+.nota-circle{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:800;font-family:'Syne',sans-serif;flex-shrink:0}
+.nota-hi{background:var(--success-dim);color:var(--success);border:2px solid rgba(74,222,128,.3)}
+.nota-mid{background:var(--warn-dim);color:var(--warn);border:2px solid rgba(251,191,36,.3)}
+.nota-lo{background:var(--danger-dim);color:var(--danger);border:2px solid rgba(248,113,113,.3)}
+.feedback-title{font-size:15px;font-weight:600}
+.feedback-subtitle{font-size:12px;color:var(--muted);margin-top:2px}
+.feedback-body{padding:16px;border-top:1px solid var(--border);display:flex;flex-direction:column;gap:14px}
+.feedback-section{font-size:13px;line-height:1.75;color:var(--muted)}
+.fb-title{font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:600;margin-bottom:5px}
+.fb-green{color:var(--success)}
+.fb-yellow{color:var(--warn)}
+.fb-blue{color:var(--info)}
+.fb-red{color:var(--danger)}
+.nova-questao-btn{width:100%;padding:9px;margin-top:12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:13px;transition:all .2s}
+.nova-questao-btn:hover{background:var(--surface3)}
 .admin-body{flex:1;padding:2rem;overflow-y:auto;max-width:900px;margin:0 auto;width:100%}
 .admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
 .admin-head h2{font-size:22px;font-weight:700}
@@ -266,6 +364,7 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
     <div class="materia-tabs">
       <button class="m-tab active" id="tab-pdfs-btn" onclick="switchMTab('pdfs')">PDFs</button>
       <button class="m-tab" id="tab-resumos-btn" onclick="switchMTab('resumos')">Resumos</button>
+      <button class="m-tab" id="tab-questoes-btn" onclick="switchMTab('questoes')">Questões</button>
     </div>
     <div class="materia-body" id="materia-body"></div>
   </div>
@@ -443,7 +542,7 @@ function showMateriaView(mat) {
 function voltarHome() { showHome(); }
 function switchMTab(tab) {
   currentMTab = tab;
-  ['pdfs','resumos'].forEach(t => document.getElementById('tab-'+t+'-btn').classList.toggle('active', t===tab));
+  ['pdfs','resumos','questoes'].forEach(t => document.getElementById('tab-'+t+'-btn').classList.toggle('active', t===tab));
   renderMateriaBody();
 }
 
@@ -596,7 +695,8 @@ async function confirmMat() {
 // MATERIA BODY
 function renderMateriaBody() {
   if(currentMTab==='pdfs') renderPDFsTab();
-  else renderResumosTab();
+  else if(currentMTab==='resumos') renderResumosTab();
+  else renderQuestoesTab();
 }
 
 // PDFs TAB
@@ -760,6 +860,225 @@ async function expandirTopico(id) {
   } catch(e) {
     if(btn){btn.disabled=false;btn.textContent='Tentar novamente';}
     console.error('Erro ao expandir tópico:',e);
+  }
+}
+
+// QUESTÕES TAB
+let questoesState = {
+  dificuldade: 'aleatorio',
+  topicoId: 'todos',
+  questaoAtiva: null,
+  banco: []
+};
+
+async function renderQuestoesTab() {
+  const el = document.getElementById('materia-body');
+  el.innerHTML = '<div style="color:var(--muted)">Carregando...</div>';
+
+  const { data: topicos } = await sb.from('topicos').select('id,titulo').eq('materia_id', currentMateria.id).order('ordem');
+  const { data: questoes } = await sb.from('questoes').select('*').eq('materia_id', currentMateria.id).order('created_at', { ascending: false });
+
+  questoesState.banco = questoes || [];
+
+  const topicosOptions = (topicos || []).map(t =>
+    `<option value="${t.id}">${t.titulo}</option>`
+  ).join('');
+
+  el.innerHTML = `<div class="questoes-layout">
+    <div class="questoes-sidebar">
+      <div class="questoes-config">
+        <h4>Gerar nova questão</h4>
+        <div class="config-label">Dificuldade</div>
+        <div class="diff-pills">
+          <button class="diff-pill selected-aleatorio" id="dp-aleatorio" onclick="setDiff('aleatorio')">🎲 Aleatório</button>
+          <button class="diff-pill" id="dp-facil" onclick="setDiff('facil')">🟢 Fácil</button>
+          <button class="diff-pill" id="dp-medio" onclick="setDiff('medio')">🟡 Médio</button>
+          <button class="diff-pill" id="dp-dificil" onclick="setDiff('dificil')">🔴 Difícil</button>
+        </div>
+        <div class="config-label">Tópico</div>
+        <select class="topico-select" id="topico-select">
+          <option value="todos">Todos os tópicos</option>
+          ${topicosOptions}
+        </select>
+        <button class="gerar-questao-btn" id="btn-gerar-q" onclick="gerarNovaQuestao()">⚡ Gerar questão</button>
+      </div>
+      ${questoesState.banco.length ? `
+      <div class="banco-questoes">
+        <div class="banco-header">Banco de questões (${questoesState.banco.length})</div>
+        ${questoesState.banco.map(q => `
+          <div class="questao-item ${questoesState.questaoAtiva?.id===q.id?'ativa':''}" onclick="selecionarQuestao('${q.id}')">
+            <span class="questao-diff-badge badge-${q.dificuldade}">${q.dificuldade}</span>
+            <span class="questao-item-text">${q.enunciado.substring(0,80)}${q.enunciado.length>80?'...':''}</span>
+          </div>`).join('')}
+      </div>` : ''}
+    </div>
+    <div id="questao-area">
+      ${questoesState.questaoAtiva
+        ? renderQuestaoHTML(questoesState.questaoAtiva)
+        : `<div class="empty-state">Nenhuma questão selecionada<small>Gere uma nova questão ou selecione uma do banco</small></div>`
+      }
+    </div>
+  </div>`;
+}
+
+function setDiff(d) {
+  questoesState.dificuldade = d;
+  ['aleatorio','facil','medio','dificil'].forEach(x => {
+    const btn = document.getElementById('dp-'+x);
+    if (btn) btn.className = 'diff-pill' + (x===d ? ' selected-'+x : '');
+  });
+}
+
+function renderQuestaoHTML(q) {
+  return `<div class="questao-ativa" id="questao-ativa-box">
+    <div class="questao-ativa-meta">
+      <span class="questao-diff-badge badge-${q.dificuldade}">${q.dificuldade}</span>
+      <span>${q.topico_titulo || ''}</span>
+    </div>
+    <h3>${q.enunciado}</h3>
+    <textarea class="resposta-textarea" id="resposta-input" placeholder="Digite sua resposta de forma dissertativa..."></textarea>
+    <div class="resposta-footer">
+      <button class="avaliar-btn" id="btn-avaliar" onclick="avaliarResposta('${q.id}')">Avaliar resposta →</button>
+    </div>
+    <div id="feedback-area"></div>
+  </div>`;
+}
+
+function selecionarQuestao(id) {
+  const q = questoesState.banco.find(x => x.id === id);
+  if (!q) return;
+  questoesState.questaoAtiva = q;
+  document.getElementById('questao-area').innerHTML = renderQuestaoHTML(q);
+  document.querySelectorAll('.questao-item').forEach(el => el.classList.toggle('ativa', el.onclick?.toString().includes(id)));
+}
+
+async function gerarNovaQuestao() {
+  const btn = document.getElementById('btn-gerar-q');
+  btn.disabled = true;
+  btn.innerHTML = 'Gerando <span class="dots"><span></span><span></span><span></span></span>';
+
+  const topicoId = document.getElementById('topico-select').value;
+  let dificuldade = questoesState.dificuldade;
+  if (dificuldade === 'aleatorio') {
+    dificuldade = ['facil','medio','dificil'][Math.floor(Math.random()*3)];
+  }
+
+  try {
+    const { data: pdfs } = await sb.from('pdfs').select('texto_extraido').eq('materia_id', currentMateria.id);
+    const ctx = (pdfs || []).map(p => p.texto_extraido).join('\n\n').slice(0, 8000);
+
+    let topicoTitulo = 'Geral';
+    let topicoCtx = '';
+    if (topicoId !== 'todos') {
+      const { data: top } = await sb.from('topicos').select('titulo,resumo').eq('id', topicoId).single();
+      if (top) { topicoTitulo = top.titulo; topicoCtx = `\n\nFoco no tópico: ${top.titulo}\n${top.resumo}`; }
+    }
+
+    const nivelDesc = { facil: 'fácil — definições e conceitos básicos', medio: 'médio — aplicação e compreensão', dificil: 'difícil — análise crítica e casos complexos' };
+
+    const t = await callAI(
+      `Gere UMA questão dissertativa de dificuldade ${nivelDesc[dificuldade]} sobre a matéria "${currentMateria.nome}".${topicoCtx}
+A questão deve ser clara, objetiva e estimular o pensamento crítico do estudante.
+Também gere uma resposta modelo completa.
+JSON: {"enunciado":"...","resposta_modelo":"..."}
+
+Conteúdo da matéria:
+${ctx}`
+    );
+
+    const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
+    const { data: novaQ, error } = await sb.from('questoes').insert({
+      materia_id: currentMateria.id,
+      topico_id: topicoId !== 'todos' ? topicoId : questoesState.banco[0]?.topico_id || null,
+      user_id: currentUser.id,
+      enunciado: parsed.enunciado,
+      dificuldade,
+      resposta_modelo: parsed.resposta_modelo,
+      topico_titulo: topicoTitulo
+    }).select().single();
+
+    if (error) throw error;
+    questoesState.questaoAtiva = novaQ;
+    renderQuestoesTab();
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = '⚡ Gerar questão';
+    console.error('Erro ao gerar questão:', e);
+  }
+}
+
+async function avaliarResposta(questaoId) {
+  const resposta = document.getElementById('resposta-input')?.value.trim();
+  if (!resposta) { alert('Escreva sua resposta antes de avaliar!'); return; }
+
+  const q = questoesState.banco.find(x => x.id === questaoId) || questoesState.questaoAtiva;
+  const btn = document.getElementById('btn-avaliar');
+  btn.disabled = true;
+  btn.innerHTML = 'Avaliando <span class="dots"><span></span><span></span><span></span></span>';
+
+  try {
+    const t = await callAI(
+      `Você é um professor universitário avaliando a resposta de um aluno.
+
+Matéria: ${currentMateria.nome}
+Pergunta: ${q.enunciado}
+Resposta modelo: ${q.resposta_modelo}
+Resposta do aluno: ${resposta}
+
+Avalie com critério e justiça. Retorne JSON:
+{
+  "nota": 8,
+  "titulo": "Boa resposta!",
+  "acertos": "O que o aluno acertou ou demonstrou compreender bem",
+  "melhorar": "O que poderia ser melhorado (se nota >= 7, reforce o conteúdo positivamente)",
+  "explicacao": "Se nota < 7: explique o conteúdo novamente de forma clara e didática. Se nota >= 7: reforce os pontos mais importantes do tema.",
+  "resposta_correta": "Resposta completa e correta (mostrar apenas se nota < 7)"
+}`,
+      'Você é um professor universitário. Responda SOMENTE em JSON válido.'
+    );
+
+    const fb = JSON.parse(t.replace(/```json|```/g,'').trim());
+    const nota = Math.round(Number(fb.nota) || 0);
+    const acertou = nota >= 7;
+    const cls = nota >= 8 ? 'nota-hi' : nota >= 5 ? 'nota-mid' : 'nota-lo';
+    const emoji = nota >= 8 ? '🎉' : nota >= 5 ? '📝' : '💪';
+
+    document.getElementById('feedback-area').innerHTML = `
+      <div class="feedback-card">
+        <div class="feedback-header">
+          <div class="nota-circle ${cls}">${nota}</div>
+          <div>
+            <div class="feedback-title">${emoji} ${fb.titulo || (acertou ? 'Boa resposta!' : 'Continue tentando!')}</div>
+            <div class="feedback-subtitle">${nota}/10 pontos · ${q.dificuldade}</div>
+          </div>
+        </div>
+        <div class="feedback-body">
+          <div class="feedback-section">
+            <div class="fb-title fb-green">✓ O que você acertou</div>
+            ${fb.acertos || '—'}
+          </div>
+          <div class="feedback-section">
+            <div class="fb-title ${acertou ? 'fb-blue' : 'fb-yellow'}">${acertou ? '💡 Reforço do conteúdo' : '⚠ O que melhorar'}</div>
+            ${fb.melhorar || '—'}
+          </div>
+          <div class="feedback-section">
+            <div class="fb-title fb-blue">📚 ${acertou ? 'Pontos-chave do tema' : 'Explicação do conteúdo'}</div>
+            ${fb.explicacao || '—'}
+          </div>
+          ${!acertou && fb.resposta_correta ? `
+          <div class="feedback-section">
+            <div class="fb-title fb-red">📋 Resposta esperada</div>
+            ${fb.resposta_correta}
+          </div>` : ''}
+        </div>
+      </div>
+      <button class="nova-questao-btn" onclick="gerarNovaQuestao()">⚡ Gerar nova questão</button>`;
+
+    btn.textContent = '✓ Avaliado';
+  } catch(e) {
+    btn.disabled = false;
+    btn.textContent = 'Avaliar resposta →';
+    console.error('Erro ao avaliar:', e);
   }
 }
 
