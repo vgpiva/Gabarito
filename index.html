@@ -1600,7 +1600,7 @@ async function uploadBanner(input, tipo) {
     if (!token) throw new Error('Sessão expirada, faça login novamente.');
 
     // Tenta deletar versão anterior (ignora erro se não existir)
-    await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
+    await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/gabarito/${path}`, {
       method: 'DELETE',
       headers: {
         'apikey': SUPABASE_ANON_CONST,
@@ -1609,7 +1609,7 @@ async function uploadBanner(input, tipo) {
     });
 
     // Faz o upload
-    const uploadRes = await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
+    const uploadRes = await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/gabarito/${path}`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_CONST,
@@ -1627,7 +1627,7 @@ async function uploadBanner(input, tipo) {
     }
 
     // URL pública da imagem
-    const url = `${SUPABASE_URL_CONST}/storage/v1/object/public/banners/${path}?v=${Date.now()}`;
+    const url = `${SUPABASE_URL_CONST}/storage/v1/object/public/gabarito/${path}?v=${Date.now()}`;
 
     // Salva URL nas settings
     await sb.from('settings').upsert({ key: `banner_${tipo}`, value: url });
