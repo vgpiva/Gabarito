@@ -765,14 +765,14 @@ async function countPages(file) {
 }
 
 // AI
-async function callAI(prompt, sys) {
+async function callAI(prompt, sys, maxTokens) {
   const r = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       system: sys || 'Responda SOMENTE em JSON válido, sem markdown, sem texto fora do JSON.',
       messages: [{ role: 'user', content: prompt }],
-      max_tokens: 2000
+      max_tokens: maxTokens || 2000
     })
   });
   const d = await r.json();
@@ -782,51 +782,63 @@ async function callAI(prompt, sys) {
 
 async function gerarTopicos(pdfRow, texto) {
   try {
+    // ETAPA 1: gera só os títulos (JSON pequeno, sem risco de corte)
     const t = await callAI(
-      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e identifique todos os tópicos relevantes para estudo.
+      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e liste todos os tópicos relevantes para estudo.
 
-Regras importantes:
-- Gere quantos tópicos forem necessários para cobrir o conteúdo — sem limite mínimo ou máximo
-- Cada tópico deve ser genuinamente relevante e distinto dos outros (não repita conteúdo)
-- Cada resumo deve ter entre 5 e 8 frases completas, escritas em parágrafos corridos
-- O resumo deve explicar o conceito em profundidade, sua importância e como se aplica na prática
-- Use linguagem clara e didática para estudantes universitários
-- Nunca seja superficial — qualidade e profundidade são mais importantes que quantidade
-- Não use bullet points, listas ou markdown nos resumos — apenas texto corrido
+Regras:
+- Liste quantos tópicos forem necessários para cobrir o conteúdo
+- Cada tópico deve ser genuinamente relevante e distinto
+- Não repita conteúdo entre tópicos
+- Retorne APENAS os títulos, sem resumos
 
-Retorne JSON: {"topicos":[{"titulo":"...","resumo":"..."}]}
+Retorne JSON: {"topicos":["Título 1","Título 2","Título 3"]}
 
 Material:
 ${texto.slice(0, 12000)}`
-    );
-    const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
+    , null, 1000);
 
-    const rows = await Promise.all((parsed.topicos || []).map(async (top, i) => {
-      let resumo_completo = '';
+    const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
+    const titulos = parsed.topicos || [];
+    if (!titulos.length) return;
+
+    // Mostra progresso na tela
+    const pdfItem = document.querySelector('.pdf-item:last-child .pdf-meta');
+    if (pdfItem) pdfItem.innerHTML = `<span class="pdf-status processing">⏳ Gerando ${titulos.length} tópicos...</span>`;
+
+    // ETAPA 2: gera resumo completo de cada tópico individualmente
+    for (let i = 0; i < titulos.length; i++) {
+      const titulo = titulos[i];
+      let resumo = '';
       try {
-        resumo_completo = await callAI(
-          `Você é um professor universitário. Escreva um texto de estudo completo e aprofundado sobre "${top.titulo}" da matéria "${currentMateria.nome}".
+        resumo = await callAI(
+          `Você é um professor universitário. Escreva um texto de estudo completo e aprofundado sobre "${titulo}" da matéria "${currentMateria.nome}".
 
 Requisitos:
 - Entre 350 e 450 palavras
 - Explique o conceito com profundidade real
-- Inclua exemplos práticos ou aplicações reais do mundo
+- Inclua exemplos práticos ou aplicações reais
 - Conecte com outros conceitos da matéria quando fizer sentido
 - Escreva em parágrafos corridos — sem bullet points, sem listas, sem markdown
-- Linguagem clara e acessível para estudantes universitários
+- Linguagem clara para estudantes universitários
 
 Contexto do material:
 ${texto.slice(0, 8000)}`,
-          'Responda em texto corrido, sem JSON, sem markdown, sem bullet points, sem listas.'
+          'Responda em texto corrido, sem JSON, sem markdown, sem bullet points.',
+          1200
         );
-      } catch(e) { resumo_completo = top.resumo; }
-      return {
-        materia_id: currentMateria.id, user_id: currentUser.id,
-        titulo: top.titulo, resumo: resumo_completo, ordem: i
-      };
-    }));
+      } catch(e) { resumo = `Resumo sobre ${titulo} não pôde ser gerado.`; }
 
-    if (rows.length) await sb.from('topicos').insert(rows);
+      // Salva cada tópico individualmente assim que fica pronto
+      await sb.from('topicos').insert({
+        materia_id: currentMateria.id,
+        user_id: currentUser.id,
+        titulo,
+        resumo,
+        ordem: i
+      });
+    }
+
   } catch(e) { console.error('Erro ao gerar tópicos:', e); }
 }
 
