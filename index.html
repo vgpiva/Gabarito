@@ -333,7 +333,18 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
   </div>
 </div>
 
-<!-- MODAL EDITAR ALUNO -->
+<!-- MODAL CONFIRMAR EXCLUSÃO -->
+<div class="modal-bg" id="confirm-modal">
+  <div class="modal-box" style="max-width:340px;text-align:center">
+    <div style="font-size:36px;margin-bottom:12px">⚠️</div>
+    <h3 id="confirm-title" style="margin-bottom:8px">Excluir matéria?</h3>
+    <p id="confirm-desc" style="font-size:13px;color:var(--muted);line-height:1.6;margin-bottom:1.25rem"></p>
+    <div style="display:flex;gap:8px">
+      <button onclick="closeConfirmModal()" style="flex:1;padding:9px;font-size:13px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text)">Cancelar</button>
+      <button id="confirm-ok-btn" style="flex:1;padding:9px;font-size:13px;font-weight:700;border-radius:var(--r-sm);border:none;background:var(--danger);color:#fff;font-family:'Syne',sans-serif">Excluir</button>
+    </div>
+  </div>
+</div>
 <div class="modal-bg" id="edit-modal">
   <div class="modal-box">
     <h3>Editar aluno</h3>
@@ -526,10 +537,36 @@ async function loadMatCount(id) {
   const el=document.getElementById('mc-'+id);
   if(el) el.textContent=`${p||0} PDF${p!==1?'s':''} · ${t||0} tópico${t!==1?'s':''}`;
 }
+// CONFIRM MODAL
+function openConfirmModal(title, desc, onConfirm) {
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-desc').textContent = desc;
+  document.getElementById('confirm-ok-btn').onclick = () => { closeConfirmModal(); onConfirm(); };
+  document.getElementById('confirm-modal').classList.add('open');
+}
+function closeConfirmModal() {
+  document.getElementById('confirm-modal').classList.remove('open');
+}
+
 async function deletarMateria(id) {
-  if(!confirm('Excluir esta matéria e todos os dados?')) return;
-  await sb.from('materias').delete().eq('id',id);
-  loadMaterias();
+  openConfirmModal(
+    'Excluir matéria?',
+    'Todos os PDFs e tópicos desta matéria serão apagados permanentemente. Esta ação não pode ser desfeita.',
+    async () => {
+      await sb.from('materias').delete().eq('id', id);
+      loadMaterias();
+    }
+  );
+}
+async function deletarPDF(id) {
+  openConfirmModal(
+    'Remover este PDF?',
+    'O arquivo será removido da matéria. Os tópicos já gerados serão mantidos.',
+    async () => {
+      await sb.from('pdfs').delete().eq('id', id);
+      renderPDFsTab();
+    }
+  );
 }
 
 // COLOR PICKER
@@ -586,11 +623,6 @@ async function renderPDFsTab() {
     html+='<div class="empty-state">Nenhum PDF ainda<small>Adicione arquivos para gerar resumos automaticamente</small></div>';
   }
   el.innerHTML=html;
-}
-async function deletarPDF(id) {
-  if(!confirm('Remover este PDF?')) return;
-  await sb.from('pdfs').delete().eq('id',id);
-  renderPDFsTab();
 }
 async function handlePDFs(input) {
   const files=Array.from(input.files);
