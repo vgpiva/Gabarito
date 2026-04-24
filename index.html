@@ -1587,36 +1587,58 @@ async function uploadBanner(input, tipo) {
   const file = input.files[0];
   if (!file) return;
   const progress = document.getElementById(`banner-${tipo}-progress`);
+  progress.style.color = 'var(--muted)';
   progress.textContent = 'Enviando...';
 
   try {
-    const ext  = file.name.split('.').pop();
+    const ext  = file.name.split('.').pop().toLowerCase();
     const path = `banner-${tipo}.${ext}`;
 
-    // Upload para o Supabase Storage
-    const formData = new FormData();
-    formData.append('', file);
+    // Pega o token da sessão atual
+    const { data: sessionData } = await sb.auth.getSession();
+    const token = sessionData?.session?.access_token;
+    if (!token) throw new Error('Sessão expirada, faça login novamente.');
 
-    const r = await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
+    // Tenta deletar versão anterior (ignora erro se não existir)
+    await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
+      method: 'DELETE',
+      headers: {
+        'apikey': SUPABASE_ANON_CONST,
+        'Authorization': `Bearer ${token}`
+      }
+    });
+
+    // Faz o upload
+    const uploadRes = await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
       method: 'POST',
       headers: {
         'apikey': SUPABASE_ANON_CONST,
-        'Authorization': `Bearer ${(await sb.auth.getSession()).data.session.access_token}`,
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': file.type,
+        'Cache-Control': '3600',
         'x-upsert': 'true'
       },
       body: file
     });
 
-    if (!r.ok) throw new Error('Erro no upload');
+    if (!uploadRes.ok) {
+      const errText = await uploadRes.text();
+      throw new Error(errText);
+    }
 
-    const url = `${SUPABASE_URL_CONST}/storage/v1/object/public/banners/${path}?t=${Date.now()}`;
+    // URL pública da imagem
+    const url = `${SUPABASE_URL_CONST}/storage/v1/object/public/banners/${path}?v=${Date.now()}`;
+
+    // Salva URL nas settings
     await sb.from('settings').upsert({ key: `banner_${tipo}`, value: url });
+
     progress.style.color = 'var(--success)';
-    progress.textContent = '✓ Imagem enviada!';
+    progress.textContent = '✓ Imagem enviada com sucesso!';
     await loadBannerAdmin();
   } catch(e) {
     progress.style.color = 'var(--danger)';
     progress.textContent = 'Erro: ' + e.message;
+    console.error('Upload error:', e);
   }
 }
 
