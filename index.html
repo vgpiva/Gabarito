@@ -4,6 +4,14 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Gabarito — Estude com IA</title>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-STFSJTT7KT"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+  gtag('config', 'G-STFSJTT7KT');
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -382,6 +390,54 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
       </div>
       <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
       <div class="auth-msg" id="auth-msg"></div>
+      <div style="text-align:center;margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border)">
+        <button onclick="showPrimeiroAcesso()" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;text-decoration:underline">
+          Primeiro acesso? Clique aqui
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRIMEIRO ACESSO -->
+<div id="page-primeiro-acesso" class="page">
+  <div class="auth-container">
+    <div class="auth-brand">
+      <div class="auth-logo">gabarito</div>
+      <div class="auth-tagline">Crie sua senha de acesso</div>
+    </div>
+    <div class="auth-card">
+      <!-- STEP 1: verificar email -->
+      <div id="pa-step1">
+        <p class="auth-subtitle">Digite seu e-mail para começar.</p>
+        <div class="form-group">
+          <label>E-mail</label>
+          <input class="form-input" type="email" id="pa-email" placeholder="seu@email.com" onkeydown="if(event.key==='Enter')verificarEmailPrimeiroAcesso()">
+        </div>
+        <button class="btn-primary" id="btn-pa-verificar" onclick="verificarEmailPrimeiroAcesso()">Continuar</button>
+        <div class="auth-msg" id="pa-msg1"></div>
+        <div style="text-align:center;margin-top:1rem">
+          <button onclick="showPage('auth')" style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer">← Voltar ao login</button>
+        </div>
+      </div>
+      <!-- STEP 2: criar senha -->
+      <div id="pa-step2" class="hidden">
+        <div style="text-align:center;margin-bottom:1.25rem">
+          <div style="font-size:28px;margin-bottom:8px">👋</div>
+          <h3 style="font-size:18px;font-weight:700" id="pa-nome-display"></h3>
+          <p style="font-size:13px;color:var(--muted);margin-top:4px">Crie sua senha para acessar o Gabarito</p>
+        </div>
+        <div class="form-group">
+          <label>Nova senha</label>
+          <input class="form-input" type="password" id="pa-senha" placeholder="Mínimo 6 caracteres">
+        </div>
+        <div class="form-group">
+          <label>Confirmar senha</label>
+          <input class="form-input" type="password" id="pa-senha2" placeholder="Digite a senha novamente" onkeydown="if(event.key==='Enter')criarSenhaPrimeiroAcesso()">
+        </div>
+        <button class="btn-primary" id="btn-pa-criar" onclick="criarSenhaPrimeiroAcesso()">Criar senha e entrar</button>
+        <div class="auth-msg" id="pa-msg2"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -551,28 +607,22 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
   </div>
 </div>
 
-<!-- MODAL NOVO ALUNO -->
+<!-- MODAL NOVO ALUNO (PRÉ-REGISTRO) -->
 <div class="modal-bg" id="user-modal">
   <div class="modal-box">
-    <h3>Cadastrar novo aluno</h3>
+    <h3>Pré-cadastrar aluno</h3>
+    <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.6">O aluno receberá um pré-cadastro. Você avisa ele e ele cria a própria senha no primeiro acesso.</p>
     <div style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome</label>
       <input class="modal-input" style="margin-bottom:0" type="text" id="new-user-name" placeholder="Nome completo">
     </div>
-    <div style="margin-bottom:10px">
+    <div style="margin-bottom:12px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">E-mail</label>
       <input class="modal-input" style="margin-bottom:0" type="email" id="new-user-email" placeholder="email@exemplo.com">
     </div>
-    <div style="margin-bottom:12px">
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Senha inicial</label>
-      <input class="modal-input" style="margin-bottom:0" type="text" id="new-user-pass" placeholder="Mínimo 6 caracteres">
-    </div>
-    <div style="font-size:11px;color:var(--muted);background:var(--surface2);padding:8px 10px;border-radius:var(--r-sm);margin-bottom:12px;line-height:1.5">
-      Anote e envie o e-mail e senha para o aluno.
-    </div>
     <div class="modal-btns">
       <button onclick="closeUserModal()">Cancelar</button>
-      <button class="modal-confirm" id="btn-create-user" onclick="createUser()">Cadastrar</button>
+      <button class="modal-confirm" id="btn-create-user" onclick="createUser()">Pré-cadastrar</button>
     </div>
     <div id="user-modal-msg" style="font-size:12px;margin-top:8px;text-align:center;min-height:16px"></div>
   </div>
@@ -673,17 +723,112 @@ async function initSession(user) {
     document.getElementById('welcome-msg').textContent='Olá, Gustavo! O que vamos estudar hoje?';
     showPage('app'); showHome(); return;
   }
-  const {data:profile} = await sb.from('profiles').select('active,blocked,name').eq('id',user.id).single();
-  if (profile?.blocked) { showBlockedPage(user.email,'blocked'); return; }
+  const {data:profile} = await sb.from('profiles').select('active,blocked,status,name').eq('id',user.id).single();
+  if (profile?.status === 'bloqueado' || profile?.blocked) { showBlockedPage(user.email,'blocked'); return; }
+  if (profile?.status === 'pre_registro') { showBlockedPage(user.email,'pending'); return; }
   if (!profile?.active) { showBlockedPage(user.email,'pending'); return; }
   const nome = profile?.name||user.email.split('@')[0];
   const primeiro = nome.split(' ')[0];
   document.getElementById('welcome-msg').textContent=`Olá, ${primeiro}! O que vamos estudar hoje?`;
   document.getElementById('app-email-display').textContent=user.email;
   document.getElementById('btn-go-admin').classList.add('hidden');
+  // Atualiza último acesso
+  await sb.from('profiles').update({ ultimo_acesso: new Date().toISOString() }).eq('id', user.id);
   showPage('app'); showHome();
 }
 sb.auth.getSession().then(({data})=>{ if(data?.session?.user) initSession(data.session.user); });
+
+// PRIMEIRO ACESSO
+function showPrimeiroAcesso() {
+  document.getElementById('pa-step1').classList.remove('hidden');
+  document.getElementById('pa-step2').classList.add('hidden');
+  document.getElementById('pa-email').value = '';
+  document.getElementById('pa-msg1').textContent = '';
+  showPage('page-primeiro-acesso');
+}
+
+async function verificarEmailPrimeiroAcesso() {
+  const email = document.getElementById('pa-email').value.trim();
+  const msg   = document.getElementById('pa-msg1');
+  const btn   = document.getElementById('btn-pa-verificar');
+  if (!email) { msg.style.color='var(--danger)'; msg.textContent='Digite seu e-mail.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Verificando...';
+
+  // Busca o perfil pelo email via backend
+  const r = await fetch('/api/admin', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'buscar_por_email', payload: { email } })
+  });
+  const { data: profile, error } = await r.json();
+  btn.disabled = false; btn.textContent = 'Continuar';
+
+  if (error || !profile) {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'E-mail não encontrado. Verifique ou entre em contato com o administrador.';
+    return;
+  }
+
+  if (profile.status === 'ativo') {
+    msg.style.color = 'var(--warn)';
+    msg.textContent = 'Este e-mail já possui uma conta ativa. Use o login com sua senha.';
+    return;
+  }
+
+  if (profile.status === 'bloqueado') {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Esta conta está bloqueada. Entre em contato com o administrador.';
+    return;
+  }
+
+  // É pré-registro — avança para criar senha
+  document.getElementById('pa-nome-display').textContent = profile.name || email;
+  document.getElementById('pa-step1').classList.add('hidden');
+  document.getElementById('pa-step2').classList.remove('hidden');
+  document.getElementById('pa-senha').focus();
+  // Guarda email para usar no próximo passo
+  window._paEmail = email;
+  window._paProfileId = profile.id;
+}
+
+async function criarSenhaPrimeiroAcesso() {
+  const senha  = document.getElementById('pa-senha').value;
+  const senha2 = document.getElementById('pa-senha2').value;
+  const msg    = document.getElementById('pa-msg2');
+  const btn    = document.getElementById('btn-pa-criar');
+
+  if (!senha || senha.length < 6) { msg.style.color='var(--danger)'; msg.textContent='Senha deve ter ao menos 6 caracteres.'; return; }
+  if (senha !== senha2) { msg.style.color='var(--danger)'; msg.textContent='As senhas não coincidem.'; return; }
+
+  btn.disabled = true; btn.textContent = 'Criando conta...';
+
+  try {
+    // Cria a conta no Auth e ativa o perfil
+    const r = await fetch('/api/admin', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'ativar_primeiro_acesso',
+        payload: { email: window._paEmail, password: senha, profile_id: window._paProfileId }
+      })
+    });
+    const result = await r.json();
+    if (result.error) throw new Error(result.error);
+
+    // Loga automaticamente
+    const { data, error } = await sb.auth.signInWithPassword({
+      email: window._paEmail,
+      password: senha
+    });
+    if (error) throw new Error(error.message);
+    await initSession(data.user);
+  } catch(e) {
+    msg.style.color = 'var(--danger)';
+    msg.textContent = 'Erro: ' + e.message;
+    btn.disabled = false; btn.textContent = 'Criar senha e entrar';
+  }
+}
 
 // MATÉRIAS
 async function loadMaterias() {
@@ -1342,7 +1487,7 @@ async function savePixKey() {
 }
 
 function openNewUserModal() {
-  ['new-user-name','new-user-email','new-user-pass'].forEach(id => document.getElementById(id).value = '');
+  ['new-user-name','new-user-email'].forEach(id => document.getElementById(id).value = '');
   document.getElementById('user-modal-msg').textContent = '';
   document.getElementById('user-modal').classList.add('open');
   setTimeout(() => document.getElementById('new-user-name').focus(), 50);
@@ -1353,19 +1498,19 @@ function closeUserModal() { document.getElementById('user-modal').classList.remo
 async function createUser() {
   const name  = document.getElementById('new-user-name').value.trim();
   const email = document.getElementById('new-user-email').value.trim();
-  const pass  = document.getElementById('new-user-pass').value.trim();
   const msg   = document.getElementById('user-modal-msg');
   const btn   = document.getElementById('btn-create-user');
-  if (!name||!email||!pass) { msg.style.color='var(--danger)'; msg.textContent='Preencha todos os campos.'; return; }
-  if (pass.length < 6) { msg.style.color='var(--danger)'; msg.textContent='Senha deve ter ao menos 6 caracteres.'; return; }
+  if (!name||!email) { msg.style.color='var(--danger)'; msg.textContent='Preencha nome e e-mail.'; return; }
   btn.disabled = true; btn.textContent = 'Cadastrando...'; msg.textContent = '';
   try {
-    await callAdmin('criar_usuario', { name, email, password: pass });
-    msg.style.color = 'var(--success)'; msg.textContent = '✓ Aluno cadastrado!'; btn.textContent = '✓';
-    setTimeout(() => { closeUserModal(); loadAdminData(); }, 1500);
+    await callAdmin('criar_pre_registro', { name, email });
+    msg.style.color = 'var(--success)';
+    msg.textContent = '✓ Pré-cadastro criado! Avise o aluno para fazer o primeiro acesso.';
+    btn.textContent = '✓';
+    setTimeout(() => { closeUserModal(); loadAdminData(); }, 2000);
   } catch(e) {
     msg.style.color = 'var(--danger)'; msg.textContent = 'Erro: ' + e.message;
-    btn.disabled = false; btn.textContent = 'Cadastrar';
+    btn.disabled = false; btn.textContent = 'Pré-cadastrar';
   }
 }
 </script>
