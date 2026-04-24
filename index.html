@@ -780,18 +780,30 @@ async function callAI(prompt, sys) {
   return d.content?.[0]?.text || '';
 }
 
-async function gerarTopicos(pdfRow,texto) {
+async function gerarTopicos(pdfRow, texto) {
   try {
-    const t=await callAI(
-      `Analise este conteúdo e extraia os 6 principais tópicos de estudo da matéria "${currentMateria.nome}". Para cada tópico escreva um resumo claro de 3-4 frases. Retorne JSON: {"topicos":[{"titulo":"...","resumo":"..."}]}\n\nConteúdo:\n${texto.slice(0,10000)}`
+    const t = await callAI(
+      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e identifique os tópicos MAIS IMPORTANTES para estudo.
+
+Regras:
+- Gere entre 4 e 6 tópicos (apenas os essenciais, não crie tópicos desnecessários)
+- Cada resumo deve ter 5 a 7 frases completas e aprofundadas
+- O resumo deve explicar o conceito, sua importância e como se aplica
+- Use linguagem clara para estudantes universitários
+- Não seja superficial — prefira menos tópicos com mais qualidade
+
+Retorne JSON: {"topicos":[{"titulo":"...","resumo":"..."}]}
+
+Material:
+${texto.slice(0, 12000)}`
     );
-    const parsed=JSON.parse(t.replace(/```json|```/g,'').trim());
-    const rows=(parsed.topicos||[]).map((top,i)=>({
-      materia_id:currentMateria.id, user_id:currentUser.id,
-      titulo:top.titulo, resumo:top.resumo, ordem:i
+    const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
+    const rows = (parsed.topicos || []).map((top, i) => ({
+      materia_id: currentMateria.id, user_id: currentUser.id,
+      titulo: top.titulo, resumo: top.resumo, ordem: i
     }));
-    if(rows.length) await sb.from('topicos').insert(rows);
-  } catch(e){console.error('Erro ao gerar tópicos:',e);}
+    if (rows.length) await sb.from('topicos').insert(rows);
+  } catch(e) { console.error('Erro ao gerar tópicos:', e); }
 }
 
 // RESUMOS TAB
@@ -851,8 +863,19 @@ async function expandirTopico(id) {
     const {data:pdfs}=await sb.from('pdfs').select('texto_extraido').eq('materia_id',currentMateria.id);
     const ctx=(pdfs||[]).map(p=>p.texto_extraido).join('\n\n').slice(0,8000);
     const t=await callAI(
-      `Escreva um texto de estudo detalhado (250-300 palavras) sobre "${top.titulo}" da matéria "${currentMateria.nome}". Seja claro e didático para um estudante universitário.\n\nContexto:\n${ctx}`,
-      'Você é um professor universitário. Responda em texto corrido, sem JSON, sem markdown.'
+      `Você é um professor universitário. Escreva um texto de estudo completo e aprofundado sobre "${top.titulo}" da matéria "${currentMateria.nome}".
+
+O texto deve:
+- Ter entre 350 e 450 palavras
+- Explicar o conceito em profundidade
+- Trazer exemplos práticos ou aplicações reais
+- Conectar com outros conceitos da matéria quando relevante
+- Ser didático e claro para um estudante universitário
+- Escreva em parágrafos corridos, sem tópicos ou bullet points
+
+Contexto do material:
+${ctx}`,
+      'Você é um professor universitário. Responda em texto corrido, sem JSON, sem markdown, sem bullet points.'
     );
     top.resumo_expandido=t; top._expandido=true;
     await sb.from('topicos').update({resumo_expandido:t}).eq('id',id);
