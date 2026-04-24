@@ -595,8 +595,9 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
     <div style="margin-bottom:12px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Status de acesso</label>
       <select class="modal-input" style="margin-bottom:0" id="edit-user-status">
-        <option value="true">✅ Ativo — pode acessar o site</option>
-        <option value="false">🚫 Bloqueado — acesso negado</option>
+        <option value="ativo">✅ Ativo — pode acessar o site</option>
+        <option value="bloqueado">🚫 Bloqueado — acesso negado</option>
+        <option value="pre_registro">🔑 Pré-registro — deve criar nova senha</option>
       </select>
     </div>
     <div class="modal-btns">
@@ -1420,7 +1421,7 @@ async function loadAdminData() {
             <button class="toggle-btn ${p.active?'toggle-on':'toggle-off'}" onclick="toggleUser('${p.id}',${p.active})">${p.active?'Bloquear':'Ativar'}</button>
             <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
               data-id="${p.id}" data-name="${(p.name||'').replace(/"/g,'&quot;')}"
-              data-email="${p.email}" data-active="${p.active}"
+              data-email="${p.email}" data-active="${p.active}" data-status="${p.status||''}"
               onclick="openEditModalFromBtn(this)">Editar</button>
           </div>`}
         </td>
@@ -1442,15 +1443,16 @@ function openEditModalFromBtn(btn) {
     btn.getAttribute('data-id'),
     btn.getAttribute('data-name'),
     btn.getAttribute('data-email'),
-    btn.getAttribute('data-active') === 'true'
+    btn.getAttribute('data-active') === 'true',
+    btn.getAttribute('data-status')
   );
 }
 
-function openEditModal(id, name, email, active) {
+function openEditModal(id, name, email, active, status) {
   document.getElementById('edit-user-id').value    = id;
   document.getElementById('edit-user-name').value  = name;
   document.getElementById('edit-user-email').value = email;
-  document.getElementById('edit-user-status').value = active ? 'true' : 'false';
+  document.getElementById('edit-user-status').value = status || (active ? 'ativo' : 'bloqueado');
   document.getElementById('edit-modal-msg').textContent = '';
   document.getElementById('edit-modal').classList.add('open');
   setTimeout(() => document.getElementById('edit-user-name').focus(), 50);
@@ -1462,13 +1464,18 @@ async function saveEditUser() {
   const id     = document.getElementById('edit-user-id').value;
   const name   = document.getElementById('edit-user-name').value.trim();
   const email  = document.getElementById('edit-user-email').value.trim();
-  const active = document.getElementById('edit-user-status').value === 'true';
+  const status = document.getElementById('edit-user-status').value;
   const msg    = document.getElementById('edit-modal-msg');
   const btn    = document.getElementById('btn-save-user');
   if (!name || !email) { msg.style.color='var(--danger)'; msg.textContent='Nome e e-mail são obrigatórios.'; return; }
   btn.disabled = true; btn.textContent = 'Salvando...';
   try {
-    await callAdmin('atualizar_usuario', { id, name, email, active, blocked: !active });
+    const updates = {
+      id, name, email, status,
+      active: status === 'ativo',
+      blocked: status === 'bloqueado'
+    };
+    await callAdmin('atualizar_usuario', updates);
     msg.style.color = 'var(--success)'; msg.textContent = '✓ Salvo!'; btn.textContent = '✓';
     setTimeout(() => { closeEditModal(); loadAdminData(); }, 1000);
   } catch(e) {
