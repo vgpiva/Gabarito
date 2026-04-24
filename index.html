@@ -1034,7 +1034,9 @@ async function loadAdminData() {
 }
 
 async function toggleUser(id, currentActive) {
-  await sb.from('profiles').update({ active: !currentActive }).eq('id', id);
+  const nowActive  = !currentActive;
+  const nowBlocked = !nowActive;
+  await sb.from('profiles').update({ active: nowActive, blocked: nowBlocked }).eq('id', id);
   loadAdminData();
 }
 
