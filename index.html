@@ -782,54 +782,56 @@ async function callAI(prompt, sys, maxTokens) {
 
 async function gerarTopicos(pdfRow, texto) {
   try {
-    // ETAPA 1: gera só os títulos (JSON pequeno, sem risco de corte)
+    // ETAPA 1: IA analisa o material completo e decide os tópicos com visão holística
     const t = await callAI(
-      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e liste todos os tópicos relevantes para estudo.
+      `Você é um professor universitário preparando um guia de estudos para seus alunos.
 
-Regras:
-- Liste quantos tópicos forem necessários para cobrir o conteúdo
-- Cada tópico deve ser genuinamente relevante e distinto
-- Não repita conteúdo entre tópicos
-- Retorne APENAS os títulos, sem resumos
+Leia este material de "${currentMateria.nome}" completo e decida quais são os GRANDES TEMAS que um aluno precisa dominar para entender o assunto.
 
-Retorne JSON: {"topicos":["Título 1","Título 2","Título 3"]}
+Pense assim: se você fosse explicar este material para um aluno em uma aula, quais seriam os capítulos da sua aula? Cada capítulo é um tópico.
 
-Material:
-${texto.slice(0, 12000)}`
-    , null, 1000);
+Critérios para decidir um tópico:
+- Representa um conceito central e independente, não um detalhe
+- É abrangente o suficiente para render um texto de estudo completo
+- Se dois assuntos são intimamente relacionados, junte-os em um único tópico
+- A quantidade deve refletir a complexidade real do material — nem mais, nem menos
+
+Retorne JSON com apenas os títulos: {"topicos":["Título 1","Título 2"]}
+
+Material completo:
+${texto.slice(0, 14000)}`
+    , null, 800);
 
     const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
     const titulos = parsed.topicos || [];
     if (!titulos.length) return;
 
-    // Mostra progresso na tela
-    const pdfItem = document.querySelector('.pdf-item:last-child .pdf-meta');
-    if (pdfItem) pdfItem.innerHTML = `<span class="pdf-status processing">⏳ Gerando ${titulos.length} tópicos...</span>`;
-
-    // ETAPA 2: gera resumo completo de cada tópico individualmente
+    // ETAPA 2: gera resumo de cada tópico sequencialmente (não em paralelo)
     for (let i = 0; i < titulos.length; i++) {
       const titulo = titulos[i];
       let resumo = '';
       try {
         resumo = await callAI(
-          `Você é um professor universitário. Escreva um texto de estudo completo e aprofundado sobre "${titulo}" da matéria "${currentMateria.nome}".
+          `Você é um professor universitário escrevendo um material de estudo sobre "${titulo}" para alunos de "${currentMateria.nome}".
 
-Requisitos:
-- Entre 350 e 450 palavras
-- Explique o conceito com profundidade real
-- Inclua exemplos práticos ou aplicações reais
-- Conecte com outros conceitos da matéria quando fizer sentido
-- Escreva em parágrafos corridos — sem bullet points, sem listas, sem markdown
-- Linguagem clara para estudantes universitários
+Escreva um texto corrido, claro e aprofundado que um aluno possa ler e realmente aprender o conceito.
 
-Contexto do material:
+O texto deve:
+- Explicar o que é o conceito e por que ele importa
+- Mostrar como funciona na prática com exemplos concretos
+- Conectar com o restante da matéria quando relevante
+- Ter entre 300 e 400 palavras
+- Ser escrito em parágrafos corridos, sem títulos, sem bullet points, sem listas
+
+Baseie-se neste material:
 ${texto.slice(0, 8000)}`,
-          'Responda em texto corrido, sem JSON, sem markdown, sem bullet points.',
-          1200
+          'Escreva apenas o texto do resumo, em parágrafos corridos. Sem JSON, sem markdown, sem bullet points.',
+          1000
         );
-      } catch(e) { resumo = `Resumo sobre ${titulo} não pôde ser gerado.`; }
+      } catch(e) {
+        resumo = `Não foi possível gerar o resumo de "${titulo}".`;
+      }
 
-      // Salva cada tópico individualmente assim que fica pronto
       await sb.from('topicos').insert({
         materia_id: currentMateria.id,
         user_id: currentUser.id,
