@@ -83,6 +83,16 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
 .welcome-header p{font-size:14px;color:var(--muted);margin-top:4px}
 .api-status{font-size:11px;color:var(--success);white-space:nowrap}
 .materias-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+/* BANNER */
+.banner-wrap{margin-bottom:1.5rem;border-radius:var(--r);overflow:hidden;cursor:default}
+.banner-wrap img{width:100%;display:block;object-fit:cover;max-height:280px;border-radius:var(--r)}
+.banner-desktop{display:block}
+.banner-mobile{display:none}
+@media(max-width:640px){
+  .banner-desktop{display:none}
+  .banner-mobile{display:block}
+  .banner-wrap img{max-height:200px}
+}
 .materia-card{border-radius:var(--r);padding:1.25rem;cursor:pointer;transition:transform .2s;position:relative;min-height:140px;display:flex;flex-direction:column;justify-content:space-between}
 .materia-card:hover{transform:translateY(-3px)}
 .materia-card h3{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
@@ -523,6 +533,8 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
       <h2 id="welcome-msg">Olá! O que vamos estudar hoje?</h2>
       <p>Selecione uma matéria ou crie uma nova para começar.</p>
     </div>
+    <!-- BANNER -->
+    <div id="banner-area"></div>
     <div class="materias-grid" id="materias-grid">
       <div style="color:var(--muted);font-size:13px">Carregando...</div>
     </div>
@@ -579,6 +591,52 @@ input,textarea,select{font-family:'DM Sans',sans-serif}
         <div class="stat-label">Bloqueados</div>
         <div class="stat-value" style="color:var(--danger)" id="stat-blocked">—</div>
         <div class="stat-sub">acesso suspenso</div>
+      </div>
+    </div>
+
+    <!-- Banner -->
+    <div class="admin-section" style="margin-bottom:1.25rem">
+      <div class="admin-section-header" style="display:flex;align-items:center;justify-content:space-between">
+        <h3>Banner da tela inicial</h3>
+        <div style="display:flex;align-items:center;gap:10px">
+          <span id="banner-status-label" style="font-size:12px;color:var(--muted)">carregando...</span>
+          <button id="banner-toggle-btn" onclick="toggleBanner()" style="padding:5px 13px;font-size:11px;font-weight:600;border-radius:20px;border:none;transition:all .2s;font-family:'Syne',sans-serif">...</button>
+        </div>
+      </div>
+      <div style="padding:1.25rem;display:flex;flex-direction:column;gap:1rem">
+        <!-- Preview -->
+        <div id="banner-preview" style="display:none">
+          <p style="font-size:12px;color:var(--muted);margin-bottom:8px">Preview atual:</p>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <div>
+              <p style="font-size:11px;color:var(--muted2);margin-bottom:4px">Desktop</p>
+              <img id="banner-preview-desktop" src="" style="width:100%;border-radius:6px;border:1px solid var(--border)">
+            </div>
+            <div>
+              <p style="font-size:11px;color:var(--muted2);margin-bottom:4px">Mobile</p>
+              <img id="banner-preview-mobile" src="" style="width:100%;border-radius:6px;border:1px solid var(--border)">
+            </div>
+          </div>
+        </div>
+        <!-- Upload -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+          <div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:6px">🖥 Banner Desktop <span style="color:var(--muted2);font-size:11px">(recomendado: 1200×280px)</span></p>
+            <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--r-sm);cursor:pointer;font-size:12px;color:var(--muted);transition:all .2s">
+              <span>📁 Selecionar imagem</span>
+              <input type="file" id="banner-desktop-input" accept="image/*" style="display:none" onchange="uploadBanner(this,'desktop')">
+            </label>
+            <div id="banner-desktop-progress" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+          </div>
+          <div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:6px">📱 Banner Mobile <span style="color:var(--muted2);font-size:11px">(recomendado: 600×200px)</span></p>
+            <label style="display:flex;align-items:center;gap:8px;padding:9px 12px;background:var(--surface2);border:1px dashed var(--border2);border-radius:var(--r-sm);cursor:pointer;font-size:12px;color:var(--muted);transition:all .2s">
+              <span>📁 Selecionar imagem</span>
+              <input type="file" id="banner-mobile-input" accept="image/*" style="display:none" onchange="uploadBanner(this,'mobile')">
+            </label>
+            <div id="banner-mobile-progress" style="font-size:11px;color:var(--muted);margin-top:4px"></div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -732,7 +790,9 @@ function showPage(id) {
 }
 function showAdmin() {
   if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
-  loadAdminData(); showPage('admin');
+  loadAdminData();
+  loadBannerAdmin();
+  showPage('admin');
 }
 function showApp() { showPage('app'); showHome(); }
 function showHome() {
@@ -740,6 +800,7 @@ function showHome() {
   document.getElementById('materia-view').classList.add('hidden');
   topicoAtivo = null;
   loadMaterias();
+  loadBanner();
 }
 function showMateriaView(mat) {
   currentMateria = mat;
@@ -1447,6 +1508,119 @@ Avalie com critério e justiça. Retorne JSON:
 }
 
 // ADMIN
+// ══════════════════════════════════════
+// BANNER
+// ══════════════════════════════════════
+const SUPABASE_URL_CONST = 'https://kzjwmwgpieavrclmfegm.supabase.co';
+const SUPABASE_ANON_CONST = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6andtd2dwaWVhdnJjbG1mZWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzI3MzQsImV4cCI6MjA5MjU0ODczNH0.UxFblYKp7keC4YWwx32XDG9Igeb6G7fZNVXV-2cN-jQ';
+
+async function loadBanner() {
+  try {
+    const { data: settings } = await sb.from('settings').select('key,value').in('key', ['banner_ativo','banner_desktop','banner_mobile']);
+    if (!settings) return;
+    const get = k => settings.find(s => s.key === k)?.value || '';
+    const ativo   = get('banner_ativo') === 'true';
+    const desktop = get('banner_desktop');
+    const mobile  = get('banner_mobile');
+
+    // Mostra banner na home
+    const area = document.getElementById('banner-area');
+    if (area && ativo && (desktop || mobile)) {
+      area.innerHTML = `<div class="banner-wrap">
+        ${desktop ? `<img class="banner-desktop" src="${desktop}" alt="Banner">` : ''}
+        ${mobile  ? `<img class="banner-mobile"  src="${mobile}"  alt="Banner">` : (desktop ? `<img class="banner-mobile" src="${desktop}" alt="Banner">` : '')}
+      </div>`;
+    } else if (area) {
+      area.innerHTML = '';
+    }
+
+    // Atualiza painel admin se estiver aberto
+    updateBannerAdmin(ativo, desktop, mobile);
+  } catch(e) { console.error('Erro ao carregar banner:', e); }
+}
+
+function updateBannerAdmin(ativo, desktop, mobile) {
+  const label = document.getElementById('banner-status-label');
+  const btn   = document.getElementById('banner-toggle-btn');
+  const prev  = document.getElementById('banner-preview');
+  if (!label || !btn) return;
+
+  label.textContent = ativo ? 'Visível para os alunos' : 'Oculto';
+  label.style.color = ativo ? 'var(--success)' : 'var(--muted)';
+  btn.textContent   = ativo ? 'Desativar' : 'Ativar';
+  btn.style.background = ativo ? 'var(--danger-dim)' : 'var(--success-dim)';
+  btn.style.color      = ativo ? 'var(--danger)' : 'var(--success)';
+
+  if (prev) {
+    if (desktop || mobile) {
+      prev.style.display = 'block';
+      const dImg = document.getElementById('banner-preview-desktop');
+      const mImg = document.getElementById('banner-preview-mobile');
+      if (dImg) dImg.src = desktop || '';
+      if (mImg) mImg.src = mobile  || desktop || '';
+    } else {
+      prev.style.display = 'none';
+    }
+  }
+}
+
+async function loadBannerAdmin() {
+  try {
+    const { data: settings } = await sb.from('settings').select('key,value').in('key', ['banner_ativo','banner_desktop','banner_mobile']);
+    if (!settings) return;
+    const get = k => settings.find(s => s.key === k)?.value || '';
+    updateBannerAdmin(get('banner_ativo') === 'true', get('banner_desktop'), get('banner_mobile'));
+  } catch(e) {}
+}
+
+async function toggleBanner() {
+  try {
+    const { data: s } = await sb.from('settings').select('value').eq('key','banner_ativo').single();
+    const novoValor = s?.value === 'true' ? 'false' : 'true';
+    await sb.from('settings').upsert({ key: 'banner_ativo', value: novoValor });
+    await loadBannerAdmin();
+    await loadBanner();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function uploadBanner(input, tipo) {
+  const file = input.files[0];
+  if (!file) return;
+  const progress = document.getElementById(`banner-${tipo}-progress`);
+  progress.textContent = 'Enviando...';
+
+  try {
+    const ext  = file.name.split('.').pop();
+    const path = `banner-${tipo}.${ext}`;
+
+    // Upload para o Supabase Storage
+    const formData = new FormData();
+    formData.append('', file);
+
+    const r = await fetch(`${SUPABASE_URL_CONST}/storage/v1/object/banners/${path}`, {
+      method: 'POST',
+      headers: {
+        'apikey': SUPABASE_ANON_CONST,
+        'Authorization': `Bearer ${(await sb.auth.getSession()).data.session.access_token}`,
+        'x-upsert': 'true'
+      },
+      body: file
+    });
+
+    if (!r.ok) throw new Error('Erro no upload');
+
+    const url = `${SUPABASE_URL_CONST}/storage/v1/object/public/banners/${path}?t=${Date.now()}`;
+    await sb.from('settings').upsert({ key: `banner_${tipo}`, value: url });
+    progress.style.color = 'var(--success)';
+    progress.textContent = '✓ Imagem enviada!';
+    await loadBannerAdmin();
+  } catch(e) {
+    progress.style.color = 'var(--danger)';
+    progress.textContent = 'Erro: ' + e.message;
+  }
+}
+
+// ══════════════════════════════════════
 // Helper para chamar o backend admin
 async function callAdmin(action, payload) {
   const r = await fetch('/api/admin', {
