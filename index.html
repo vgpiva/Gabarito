@@ -547,8 +547,15 @@ function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.getElementById('page-' + id).classList.add('active');
 }
-function showAdmin() { loadAdminData(); showPage('admin'); }
-function showApp()   { showPage('app'); }
+function showAdmin() {
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
+    showPage('app');
+    return;
+  }
+  loadAdminData();
+  showPage('admin');
+}
+function showApp() { showPage('app'); }
 
 // ══════════════════════════════════════
 // AUTH
@@ -624,6 +631,7 @@ async function initSession(user) {
   }
 
   document.getElementById('app-email-display').textContent = user.email;
+  document.getElementById('btn-go-admin').classList.add('hidden');
   renderSidebar();
   showPage('app');
 }
