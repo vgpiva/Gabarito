@@ -783,14 +783,16 @@ async function callAI(prompt, sys) {
 async function gerarTopicos(pdfRow, texto) {
   try {
     const t = await callAI(
-      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e identifique os tópicos MAIS IMPORTANTES para estudo.
+      `Você é um professor universitário experiente. Analise este material de "${currentMateria.nome}" e identifique todos os tópicos relevantes para estudo.
 
-Regras:
-- Gere entre 4 e 6 tópicos (apenas os essenciais, não crie tópicos desnecessários)
-- Cada resumo deve ter 5 a 7 frases completas e aprofundadas
-- O resumo deve explicar o conceito, sua importância e como se aplica
-- Use linguagem clara para estudantes universitários
-- Não seja superficial — prefira menos tópicos com mais qualidade
+Regras importantes:
+- Gere quantos tópicos forem necessários para cobrir o conteúdo — sem limite mínimo ou máximo
+- Cada tópico deve ser genuinamente relevante e distinto dos outros (não repita conteúdo)
+- Cada resumo deve ter entre 5 e 8 frases completas, escritas em parágrafos corridos
+- O resumo deve explicar o conceito em profundidade, sua importância e como se aplica na prática
+- Use linguagem clara e didática para estudantes universitários
+- Nunca seja superficial — qualidade e profundidade são mais importantes que quantidade
+- Não use bullet points, listas ou markdown nos resumos — apenas texto corrido
 
 Retorne JSON: {"topicos":[{"titulo":"...","resumo":"..."}]}
 
@@ -798,10 +800,32 @@ Material:
 ${texto.slice(0, 12000)}`
     );
     const parsed = JSON.parse(t.replace(/```json|```/g,'').trim());
-    const rows = (parsed.topicos || []).map((top, i) => ({
-      materia_id: currentMateria.id, user_id: currentUser.id,
-      titulo: top.titulo, resumo: top.resumo, ordem: i
+
+    const rows = await Promise.all((parsed.topicos || []).map(async (top, i) => {
+      let resumo_completo = '';
+      try {
+        resumo_completo = await callAI(
+          `Você é um professor universitário. Escreva um texto de estudo completo e aprofundado sobre "${top.titulo}" da matéria "${currentMateria.nome}".
+
+Requisitos:
+- Entre 350 e 450 palavras
+- Explique o conceito com profundidade real
+- Inclua exemplos práticos ou aplicações reais do mundo
+- Conecte com outros conceitos da matéria quando fizer sentido
+- Escreva em parágrafos corridos — sem bullet points, sem listas, sem markdown
+- Linguagem clara e acessível para estudantes universitários
+
+Contexto do material:
+${texto.slice(0, 8000)}`,
+          'Responda em texto corrido, sem JSON, sem markdown, sem bullet points, sem listas.'
+        );
+      } catch(e) { resumo_completo = top.resumo; }
+      return {
+        materia_id: currentMateria.id, user_id: currentUser.id,
+        titulo: top.titulo, resumo: resumo_completo, ordem: i
+      };
     }));
+
     if (rows.length) await sb.from('topicos').insert(rows);
   } catch(e) { console.error('Erro ao gerar tópicos:', e); }
 }
@@ -840,15 +864,11 @@ function selecionarTopico(id) {
 }
 
 function renderTopicoConteudo(top) {
-  const el=document.getElementById('topico-content-area');
-  if(!el) return;
-  const texto=top._expandido?(top.resumo_expandido||top.resumo):top.resumo;
-  el.innerHTML=`<div class="topico-content">
+  const el = document.getElementById('topico-content-area');
+  if (!el) return;
+  el.innerHTML = `<div class="topico-content">
     <h3>${top.titulo}</h3>
-    <p id="topico-texto">${texto||'...'}</p>
-    <button class="expand-btn-big" id="expand-btn" onclick="expandirTopico('${top.id}')">
-      ${top._expandido?'↩ Ver resumo':'↓ Aprofundar com IA'}
-    </button>
+    <p id="topico-texto">${top.resumo || '...'}</p>
   </div>`;
 }
 
