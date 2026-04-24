@@ -1,59 +1,75 @@
-import { createClient } from '@supabase/supabase-js';
-
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   const { action, payload } = req.body;
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SERVICE_KEY  = process.env.SUPABASE_SERVICE_KEY;
 
-  // Cria cliente com service key — tem acesso total
-  const sb = createClient(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_KEY
-  );
+  async function sbFetch(path, method = 'GET', body = null) {
+    const opts = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`,
+        'Prefer': 'return=representation'
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(`${SUPABASE_URL}/rest/v1${path}`, opts);
+    return r.json();
+  }
+
+  async function authFetch(path, method = 'GET', body = null) {
+    const opts = {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SERVICE_KEY,
+        'Authorization': `Bearer ${SERVICE_KEY}`
+      }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    const r = await fetch(`${SUPABASE_URL}/auth/v1${path}`, opts);
+    return r.json();
+  }
 
   try {
     if (action === 'listar_usuarios') {
-      const { data, error } = await sb
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: true });
-      if (error) throw error;
+      const data = await sbFetch('/profiles?order=created_at.asc');
       return res.status(200).json({ data });
     }
 
     if (action === 'atualizar_usuario') {
       const { id, ...updates } = payload;
-      const { error } = await sb.from('profiles').update(updates).eq('id', id);
-      if (error) throw error;
+      await sbFetch(`/profiles?id=eq.${id}`, 'PATCH', updates);
       return res.status(200).json({ ok: true });
     }
 
     if (action === 'criar_usuario') {
       const { email, password, name } = payload;
-      const { data, error } = await sb.auth.admin.createUser({
+      const user = await authFetch('/admin/users', 'POST', {
         email, password,
-        user_metadata: { name },
-        email_confirm: true
+        email_confirm: true,
+        user_metadata: { name }
       });
-      if (error) throw error;
-      await sb.from('profiles').insert({
-        id: data.user.id, email, name, active: true, blocked: false
+      if (user.error) throw new Error(user.error.message || user.msg);
+      await sbFetch('/profiles', 'POST', {
+        id: user.id, email, name, active: true, blocked: false
       });
       return res.status(200).json({ ok: true });
     }
 
     if (action === 'get_settings') {
-      const { data, error } = await sb.from('settings').select('*');
-      if (error) throw error;
+      const data = await sbFetch('/settings');
       return res.status(200).json({ data });
     }
 
     if (action === 'save_settings') {
       const { key, value } = payload;
-      const { error } = await sb.from('settings').upsert({ key, value });
-      if (error) throw error;
+      await sbFetch('/settings', 'POST', { key, value });
       return res.status(200).json({ ok: true });
     }
 
