@@ -8,288 +8,184 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
 <style>
-:root {
-  --bg: #09090f;
-  --surface: #111118;
-  --surface2: #18181f;
-  --surface3: #1f1f28;
-  --border: rgba(255,255,255,0.06);
-  --border2: rgba(255,255,255,0.11);
-  --accent: #c8f135;
-  --accent-dim: rgba(200,241,53,0.12);
-  --accent-border: rgba(200,241,53,0.25);
-  --text: #ededf0;
-  --muted: #7a7a8a;
-  --muted2: #44444f;
-  --success: #4ade80;
-  --success-dim: rgba(74,222,128,0.1);
-  --warn: #fbbf24;
-  --warn-dim: rgba(251,191,36,0.1);
-  --danger: #f87171;
-  --danger-dim: rgba(248,113,113,0.1);
-  --info: #60a5fa;
-  --info-dim: rgba(96,165,250,0.1);
-  --r: 10px;
-  --r-sm: 7px;
-}
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 14px; line-height: 1.5; min-height: 100vh; -webkit-font-smoothing: antialiased; }
-h1,h2,h3,h4,h5 { font-family: 'Syne', sans-serif; line-height: 1.2; }
-button { font-family: 'DM Sans', sans-serif; cursor: pointer; }
-input, textarea, select { font-family: 'DM Sans', sans-serif; }
-
-/* ── SCROLLBAR ── */
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 4px; }
-
-/* ── UTILS ── */
-.hidden { display: none !important; }
-.tag { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; gap: 4px; }
-.tag-green { background: var(--success-dim); color: var(--success); }
-.tag-yellow { background: var(--warn-dim); color: var(--warn); }
-.tag-red { background: var(--danger-dim); color: var(--danger); }
-.tag-accent { background: var(--accent-dim); color: var(--accent); }
-.tag-blue { background: var(--info-dim); color: var(--info); }
-
-/* ── PAGES ── */
-.page { display: none; min-height: 100vh; flex-direction: column; }
-.page.active { display: flex; }
-
-/* ════════════════════════════════
-   AUTH PAGE
-════════════════════════════════ */
-#page-auth {
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  background: var(--bg);
-  position: relative;
-  overflow: hidden;
-}
-#page-auth::before {
-  content: '';
-  position: absolute;
-  width: 700px; height: 700px;
-  background: radial-gradient(circle, rgba(200,241,53,0.05) 0%, transparent 65%);
-  top: -200px; left: -150px;
-  pointer-events: none;
-}
-#page-auth::after {
-  content: '';
-  position: absolute;
-  width: 500px; height: 500px;
-  background: radial-gradient(circle, rgba(96,165,250,0.04) 0%, transparent 65%);
-  bottom: -100px; right: -100px;
-  pointer-events: none;
-}
-.auth-container { width: 100%; max-width: 400px; position: relative; z-index: 1; }
-.auth-brand { margin-bottom: 2rem; }
-.auth-logo { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; color: var(--accent); letter-spacing: -1px; }
-.auth-tagline { font-size: 14px; color: var(--muted); margin-top: 5px; }
-.auth-card { background: var(--surface); border: 1px solid var(--border2); border-radius: 16px; padding: 1.75rem; }
-.auth-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
-.form-group { margin-bottom: 13px; }
-.form-group label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 500; }
-.form-input { width: 100%; padding: 10px 13px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 14px; outline: none; transition: border-color 0.2s; }
-.form-input:focus { border-color: var(--accent-border); }
-.form-input::placeholder { color: var(--muted2); }
-.btn-primary { width: 100%; padding: 11px; background: var(--accent); color: #0a0a0f; font-size: 14px; font-weight: 700; font-family: 'Syne', sans-serif; border: none; border-radius: var(--r-sm); transition: all 0.2s; letter-spacing: 0.2px; }
-.btn-primary:hover { background: #b8e020; transform: translateY(-1px); }
-.btn-primary:active { transform: translateY(0); }
-.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-.auth-msg { font-size: 12px; margin-top: 10px; text-align: center; min-height: 16px; }
-.auth-msg.error { color: var(--danger); }
-.auth-msg.success { color: var(--success); }
-
-/* ════════════════════════════════
-   TOPNAV
-════════════════════════════════ */
-.topnav {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem; height: 54px;
-  background: var(--surface); border-bottom: 1px solid var(--border);
-  position: sticky; top: 0; z-index: 100; flex-shrink: 0;
-}
-.nav-logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
-.nav-right { display: flex; align-items: center; gap: 10px; }
-.nav-email { font-size: 12px; color: var(--muted); max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.nav-btn { padding: 5px 13px; font-size: 12px; border-radius: 20px; border: 1px solid var(--border2); background: transparent; color: var(--muted); transition: all 0.2s; }
-.nav-btn:hover { color: var(--text); border-color: var(--border2); background: var(--surface2); }
-.nav-btn-accent { background: var(--accent-dim); color: var(--accent); border-color: var(--accent-border); }
-.nav-btn-accent:hover { background: rgba(200,241,53,0.2); color: var(--accent); }
-
-/* ════════════════════════════════
-   BLOCKED PAGE
-════════════════════════════════ */
-.blocked-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 2rem; }
-.blocked-card { max-width: 440px; width: 100%; text-align: center; }
-.blocked-icon { font-size: 52px; margin-bottom: 1.25rem; }
-.blocked-card h2 { font-size: 26px; font-weight: 800; margin-bottom: 8px; }
-.blocked-card > p { font-size: 14px; color: var(--muted); line-height: 1.65; margin-bottom: 1.5rem; }
-.pix-box { background: var(--surface); border: 1px solid rgba(251,191,36,0.2); border-radius: var(--r); padding: 1.25rem; text-align: left; margin-bottom: 1rem; }
-.pix-box h4 { font-size: 13px; font-weight: 600; color: var(--warn); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
-.pix-box p { font-size: 13px; color: var(--muted); line-height: 1.6; }
-.pix-value { font-family: monospace; font-size: 13px; background: var(--surface2); border: 1px solid var(--border2); padding: 8px 12px; border-radius: var(--r-sm); color: var(--text); display: block; word-break: break-all; margin-top: 8px; }
-.blocked-footer { font-size: 12px; color: var(--muted2); }
-
-/* ════════════════════════════════
-   MAIN APP LAYOUT
-════════════════════════════════ */
-.app-layout { display: flex; flex: 1; overflow: hidden; height: calc(100vh - 54px); }
-
-/* SIDEBAR */
-.sidebar { width: 210px; flex-shrink: 0; background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
-.sidebar-top { padding: 1rem 10px 0.5rem; flex: 1; }
-.sidebar-section-label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted2); padding: 0 8px; margin-bottom: 5px; font-weight: 500; }
-.mat-item { display: flex; align-items: center; gap: 7px; padding: 8px 10px; border-radius: var(--r-sm); cursor: pointer; color: var(--muted); transition: all 0.15s; }
-.mat-item:hover { background: var(--surface2); color: var(--text); }
-.mat-item.active { background: var(--accent-dim); color: var(--accent); }
-.mat-name { flex: 1; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.mat-count { font-size: 10px; background: var(--surface3); color: var(--muted); padding: 2px 6px; border-radius: 10px; flex-shrink: 0; }
-.mat-item.active .mat-count { background: rgba(200,241,53,0.15); color: var(--accent); }
-.sidebar-add { display: flex; align-items: center; gap: 7px; padding: 8px 10px; color: var(--muted2); font-size: 13px; cursor: pointer; border-radius: var(--r-sm); transition: all 0.15s; margin-top: 4px; }
-.sidebar-add:hover { color: var(--muted); background: var(--surface2); }
-.sidebar-bottom { padding: 12px; border-top: 1px solid var(--border); }
-.sidebar-bottom label { display: block; font-size: 10px; text-transform: uppercase; letter-spacing: 0.07em; color: var(--muted2); margin-bottom: 6px; }
-.api-row { display: flex; gap: 5px; }
-.api-input { flex: 1; padding: 6px 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 11px; font-family: monospace; outline: none; min-width: 0; }
-.api-input:focus { border-color: var(--accent-border); }
-.api-save-btn { padding: 5px 9px; background: var(--accent-dim); color: var(--accent); border: none; border-radius: 6px; font-size: 11px; font-weight: 500; }
-
-/* CONTENT */
-.content { flex: 1; overflow-y: auto; padding: 1.75rem 2rem; min-width: 0; }
-.content-title { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-.content-sub { font-size: 13px; color: var(--muted); margin-bottom: 1.5rem; }
-
-/* Upload zone */
-.upload-zone { border: 1px dashed var(--border2); border-radius: var(--r); padding: 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s; background: var(--surface); margin-bottom: 10px; }
-.upload-zone:hover { border-color: var(--accent-border); background: rgba(200,241,53,0.02); }
-.upload-zone strong { font-size: 14px; font-family: 'Syne', sans-serif; display: block; margin-bottom: 3px; }
-.upload-zone p { font-size: 12px; color: var(--muted); }
-
-/* PDF list */
-.pdf-item { display: flex; align-items: center; gap: 10px; padding: 10px 13px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-sm); margin-bottom: 7px; }
-.pdf-badge { background: var(--danger-dim); color: var(--danger); font-size: 10px; font-weight: 700; padding: 3px 7px; border-radius: 5px; flex-shrink: 0; font-family: 'Syne', sans-serif; letter-spacing: 0.05em; }
-.pdf-info { flex: 1; min-width: 0; }
-.pdf-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.pdf-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-.pdf-del { background: none; border: none; color: var(--muted2); font-size: 14px; padding: 3px 6px; transition: color 0.15s; }
-.pdf-del:hover { color: var(--danger); }
-
-/* Generate button */
-.gen-btn { width: 100%; padding: 10px 14px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 13px; font-family: 'Syne', sans-serif; transition: all 0.2s; margin-bottom: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 7px; }
-.gen-btn:hover:not(:disabled) { border-color: var(--accent-border); color: var(--accent); }
-.gen-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Tabs */
-.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 1.25rem; }
-.tab-btn { padding: 8px 16px; font-size: 13px; cursor: pointer; color: var(--muted); border: none; border-bottom: 2px solid transparent; margin-bottom: -1px; background: transparent; transition: all 0.15s; }
-.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
-
-/* Resumos */
-.topic-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem; margin-bottom: 10px; transition: border-color 0.2s; }
-.topic-card:hover { border-color: var(--border2); }
-.topic-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; margin-bottom: 8px; }
-.topic-title { font-size: 15px; font-weight: 600; color: var(--text); }
-.expand-btn { font-size: 11px; color: var(--accent); background: none; border: none; opacity: 0.7; white-space: nowrap; flex-shrink: 0; }
-.expand-btn:hover { opacity: 1; }
-.topic-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
-
-/* Difficulty pills */
-.diff-row { display: flex; gap: 8px; margin-bottom: 1rem; }
-.diff-pill { padding: 5px 14px; font-size: 12px; border: 1px solid var(--border2); border-radius: 20px; background: transparent; color: var(--muted); transition: all 0.15s; }
-.diff-pill:hover { color: var(--text); }
-.diff-pill.facil.on { background: var(--success-dim); color: var(--success); border-color: rgba(74,222,128,0.2); }
-.diff-pill.medio.on { background: var(--warn-dim); color: var(--warn); border-color: rgba(251,191,36,0.2); }
-.diff-pill.dificil.on { background: var(--danger-dim); color: var(--danger); border-color: rgba(248,113,113,0.2); }
-
-/* Question cards */
-.q-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1.25rem; margin-bottom: 10px; }
-.q-meta { font-size: 11px; color: var(--muted2); margin-bottom: 7px; }
-.q-text { font-size: 14px; font-weight: 500; line-height: 1.6; margin-bottom: 12px; color: var(--text); }
-.q-textarea { width: 100%; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); padding: 10px 12px; color: var(--text); font-size: 13px; resize: vertical; min-height: 80px; outline: none; transition: border-color 0.2s; line-height: 1.6; }
-.q-textarea:focus { border-color: var(--accent-border); }
-.q-footer { display: flex; justify-content: flex-end; margin-top: 10px; }
-.q-submit { padding: 7px 16px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-sm); font-size: 12px; font-weight: 500; transition: all 0.2s; }
-.q-submit:hover:not(:disabled) { background: rgba(200,241,53,0.2); }
-.q-submit:disabled { opacity: 0.5; cursor: not-allowed; }
-
-/* Feedback */
-.feedback-box { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--r-sm); padding: 13px; margin-top: 12px; display: none; }
-.feedback-box.show { display: block; }
-.nota-badge { display: inline-flex; align-items: center; padding: 4px 13px; border-radius: 20px; font-size: 13px; font-weight: 700; font-family: 'Syne', sans-serif; margin-bottom: 10px; }
-.nota-hi { background: var(--success-dim); color: var(--success); }
-.nota-mid { background: var(--warn-dim); color: var(--warn); }
-.nota-lo { background: var(--danger-dim); color: var(--danger); }
-.fb-text { font-size: 13px; color: var(--muted); line-height: 1.7; }
-.fb-label { color: var(--text); font-weight: 500; }
-
-/* Loading dots */
-.dots { display: inline-flex; gap: 3px; align-items: center; }
-.dots span { width: 4px; height: 4px; border-radius: 50%; background: var(--muted); animation: blink 1.2s infinite; }
-.dots span:nth-child(2) { animation-delay: 0.2s; }
-.dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
-
-/* Empty state */
-.empty-state { text-align: center; padding: 3rem 0; color: var(--muted); }
-.empty-state small { display: block; font-size: 12px; color: var(--muted2); margin-top: 5px; }
-
-/* ════════════════════════════════
-   ADMIN PAGE
-════════════════════════════════ */
-.admin-body { flex: 1; padding: 2rem; overflow-y: auto; max-width: 900px; margin: 0 auto; width: 100%; }
-.admin-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
-.admin-head h2 { font-size: 22px; font-weight: 700; }
-.stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 1.5rem; }
-.stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 1rem 1.25rem; }
-.stat-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); margin-bottom: 6px; }
-.stat-value { font-size: 30px; font-weight: 800; font-family: 'Syne', sans-serif; color: var(--text); line-height: 1; }
-.stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
-.admin-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 1.25rem; overflow: hidden; }
-.admin-section-header { padding: 1rem 1.25rem; border-bottom: 1px solid var(--border); }
-.admin-section-header h3 { font-size: 14px; font-weight: 600; }
-.pix-config { padding: 1.25rem; }
-.pix-config p { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-.pix-row { display: flex; gap: 8px; }
-.pix-row input { flex: 1; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 13px; outline: none; }
-.pix-row input:focus { border-color: var(--accent-border); }
-.pix-row button { padding: 9px 18px; background: var(--accent-dim); color: var(--accent); border: 1px solid var(--accent-border); border-radius: var(--r-sm); font-size: 13px; font-weight: 500; transition: all 0.2s; }
-.pix-row button:hover { background: rgba(200,241,53,0.2); }
-.users-table { width: 100%; border-collapse: collapse; }
-.users-table th { padding: 10px 14px; text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); border-bottom: 1px solid var(--border); font-weight: 500; }
-.users-table td { padding: 12px 14px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.users-table tr:last-child td { border-bottom: none; }
-.users-table tbody tr:hover td { background: var(--surface2); }
-.toggle-btn { padding: 5px 13px; font-size: 11px; font-weight: 600; border-radius: 20px; border: none; transition: all 0.2s; font-family: 'Syne', sans-serif; }
-.toggle-on { background: var(--danger-dim); color: var(--danger); }
-.toggle-on:hover { background: rgba(248,113,113,0.2); }
-.toggle-off { background: var(--success-dim); color: var(--success); }
-.toggle-off:hover { background: rgba(74,222,128,0.2); }
-
-/* ════════════════════════════════
-   MODAL
-════════════════════════════════ */
-.modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 1rem; }
-.modal-bg.open { display: flex; }
-.modal-box { background: var(--surface); border: 1px solid var(--border2); border-radius: 14px; padding: 1.5rem; width: 100%; max-width: 320px; }
-.modal-box h3 { font-size: 16px; font-weight: 700; margin-bottom: 1rem; }
-.modal-input { width: 100%; padding: 9px 12px; background: var(--surface2); border: 1px solid var(--border2); border-radius: var(--r-sm); color: var(--text); font-size: 14px; outline: none; margin-bottom: 12px; }
-.modal-input:focus { border-color: var(--accent-border); }
-.modal-btns { display: flex; gap: 8px; justify-content: flex-end; }
-.modal-btns button { padding: 7px 16px; font-size: 13px; border-radius: var(--r-sm); border: 1px solid var(--border2); background: transparent; color: var(--text); transition: all 0.2s; }
-.modal-btns .modal-confirm { background: var(--accent); color: #0a0a0f; border: none; font-weight: 700; font-family: 'Syne', sans-serif; }
-.modal-btns .modal-confirm:hover { background: #b8e020; }
+:root{--bg:#09090f;--surface:#111118;--surface2:#18181f;--surface3:#1f1f28;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.11);--accent:#c8f135;--accent-dim:rgba(200,241,53,0.12);--accent-border:rgba(200,241,53,0.25);--text:#ededf0;--muted:#7a7a8a;--muted2:#44444f;--success:#4ade80;--success-dim:rgba(74,222,128,0.1);--warn:#fbbf24;--warn-dim:rgba(251,191,36,0.1);--danger:#f87171;--danger-dim:rgba(248,113,113,0.1);--info:#60a5fa;--info-dim:rgba(96,165,250,0.1);--r:10px;--r-sm:7px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;line-height:1.5;min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4,h5{font-family:'Syne',sans-serif;line-height:1.2}
+button{font-family:'DM Sans',sans-serif;cursor:pointer}
+input,textarea,select{font-family:'DM Sans',sans-serif}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.hidden{display:none!important}
+.tag{display:inline-flex;align-items:center;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:500;gap:4px}
+.tag-green{background:var(--success-dim);color:var(--success)}
+.tag-yellow{background:var(--warn-dim);color:var(--warn)}
+.tag-red{background:var(--danger-dim);color:var(--danger)}
+.tag-accent{background:var(--accent-dim);color:var(--accent)}
+.tag-blue{background:var(--info-dim);color:var(--info)}
+.page{display:none;min-height:100vh;flex-direction:column}
+.page.active{display:flex}
+/* AUTH */
+#page-auth{align-items:center;justify-content:center;padding:2rem;background:var(--bg);position:relative;overflow:hidden}
+#page-auth::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(200,241,53,0.05) 0%,transparent 65%);top:-200px;left:-150px;pointer-events:none}
+#page-auth::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(96,165,250,0.04) 0%,transparent 65%);bottom:-100px;right:-100px;pointer-events:none}
+.auth-container{width:100%;max-width:400px;position:relative;z-index:1}
+.auth-brand{margin-bottom:2rem}
+.auth-logo{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--accent);letter-spacing:-1px}
+.auth-tagline{font-size:14px;color:var(--muted);margin-top:5px}
+.auth-card{background:var(--surface);border:1px solid var(--border2);border-radius:16px;padding:1.75rem}
+.auth-subtitle{font-size:13px;color:var(--muted);margin-bottom:1.5rem}
+.form-group{margin-bottom:13px}
+.form-group label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:500}
+.form-input{width:100%;padding:10px 13px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;transition:border-color .2s}
+.form-input:focus{border-color:var(--accent-border)}
+.form-input::placeholder{color:var(--muted2)}
+.btn-primary{width:100%;padding:11px;background:var(--accent);color:#0a0a0f;font-size:14px;font-weight:700;font-family:'Syne',sans-serif;border:none;border-radius:var(--r-sm);transition:all .2s;letter-spacing:.2px}
+.btn-primary:hover{background:#b8e020;transform:translateY(-1px)}
+.btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.auth-msg{font-size:12px;margin-top:10px;text-align:center;min-height:16px}
+.auth-msg.error{color:var(--danger)}
+.auth-msg.success{color:var(--success)}
+/* TOPNAV */
+.topnav{display:flex;align-items:center;justify-content:space-between;padding:0 1.5rem;height:54px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100;flex-shrink:0}
+.nav-logo{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;color:var(--accent);letter-spacing:-.5px}
+.nav-right{display:flex;align-items:center;gap:10px}
+.nav-email{font-size:12px;color:var(--muted);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nav-btn{padding:5px 13px;font-size:12px;border-radius:20px;border:1px solid var(--border2);background:transparent;color:var(--muted);transition:all .2s}
+.nav-btn:hover{color:var(--text);background:var(--surface2)}
+.nav-btn-accent{background:var(--accent-dim);color:var(--accent);border-color:var(--accent-border)}
+.nav-btn-accent:hover{background:rgba(200,241,53,0.2);color:var(--accent)}
+/* BLOCKED */
+.blocked-body{flex:1;display:flex;align-items:center;justify-content:center;padding:2rem}
+.blocked-card{max-width:440px;width:100%;text-align:center}
+.blocked-icon{font-size:52px;margin-bottom:1.25rem}
+.blocked-card h2{font-size:26px;font-weight:800;margin-bottom:8px}
+.blocked-card>p{font-size:14px;color:var(--muted);line-height:1.65;margin-bottom:1.5rem}
+.pix-box{background:var(--surface);border:1px solid rgba(251,191,36,.2);border-radius:var(--r);padding:1.25rem;text-align:left;margin-bottom:1rem}
+.pix-box h4{font-size:13px;font-weight:600;color:var(--warn);margin-bottom:10px}
+.pix-box p{font-size:13px;color:var(--muted);line-height:1.6}
+.pix-value{font-family:monospace;font-size:13px;background:var(--surface2);border:1px solid var(--border2);padding:8px 12px;border-radius:var(--r-sm);color:var(--text);display:block;word-break:break-all;margin-top:8px}
+.blocked-footer{font-size:12px;color:var(--muted2)}
+/* APP HOME */
+.app-home{flex:1;overflow-y:auto;padding:2rem}
+.welcome-header{margin-bottom:1.5rem}
+.welcome-header h2{font-size:26px;font-weight:800}
+.welcome-header p{font-size:14px;color:var(--muted);margin-top:4px}
+.api-status{font-size:11px;color:var(--success);white-space:nowrap}
+.materias-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.materia-card{border-radius:var(--r);padding:1.25rem;cursor:pointer;transition:transform .2s;position:relative;min-height:140px;display:flex;flex-direction:column;justify-content:space-between}
+.materia-card:hover{transform:translateY(-3px)}
+.materia-card h3{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.materia-card p{font-size:12px;color:rgba(255,255,255,0.7);line-height:1.4}
+.materia-card-bottom{display:flex;align-items:center;justify-content:space-between;margin-top:1rem}
+.materia-card-bottom span{font-size:11px;color:rgba(255,255,255,0.65)}
+.materia-card-del{background:rgba(0,0,0,0.25);border:none;color:rgba(255,255,255,0.65);width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;transition:all .15s}
+.materia-card-del:hover{background:rgba(0,0,0,0.55);color:#fff}
+.add-materia-card{border-radius:var(--r);padding:1.25rem;cursor:pointer;transition:all .2s;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;border:1px dashed var(--border2);background:transparent;color:var(--muted);width:100%}
+.add-materia-card:hover{border-color:var(--accent-border);color:var(--accent);background:var(--accent-dim)}
+.add-materia-card span{font-size:28px;line-height:1}
+.add-materia-card p{font-size:13px}
+/* MATERIA VIEW */
+.materia-view{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.materia-header{padding:1rem 2rem;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:12px;flex-shrink:0}
+.materia-header-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
+.materia-header h2{font-size:18px;font-weight:700;flex:1}
+.materia-header p{font-size:12px;color:var(--muted)}
+.back-link{display:flex;align-items:center;gap:5px;font-size:13px;color:var(--muted);cursor:pointer;padding:5px 10px;border-radius:var(--r-sm);transition:all .15s;border:none;background:transparent;flex-shrink:0}
+.back-link:hover{color:var(--text);background:var(--surface2)}
+.materia-tabs{display:flex;border-bottom:1px solid var(--border);padding:0 2rem;flex-shrink:0}
+.m-tab{padding:10px 18px;font-size:13px;cursor:pointer;color:var(--muted);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:transparent;transition:all .15s}
+.m-tab.active{color:var(--accent);border-bottom-color:var(--accent);font-weight:500}
+.materia-body{flex:1;overflow-y:auto;padding:1.75rem 2rem}
+/* PDFs */
+.upload-zone{border:1px dashed var(--border2);border-radius:var(--r);padding:1.5rem;text-align:center;cursor:pointer;transition:all .2s;background:var(--surface);margin-bottom:14px}
+.upload-zone:hover{border-color:var(--accent-border);background:rgba(200,241,53,0.02)}
+.upload-zone strong{font-size:14px;font-family:'Syne',sans-serif;display:block;margin-bottom:4px}
+.upload-zone p{font-size:12px;color:var(--muted)}
+.pdf-item{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-sm);margin-bottom:8px}
+.pdf-badge{background:var(--danger-dim);color:var(--danger);font-size:10px;font-weight:700;padding:3px 7px;border-radius:5px;flex-shrink:0;font-family:'Syne',sans-serif}
+.pdf-info{flex:1;min-width:0}
+.pdf-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pdf-meta{font-size:11px;color:var(--muted);margin-top:2px;display:flex;align-items:center;gap:8px}
+.pdf-status{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 7px;border-radius:10px}
+.pdf-status.processing{background:var(--warn-dim);color:var(--warn)}
+.pdf-status.done{background:var(--success-dim);color:var(--success)}
+.pdf-status.error{background:var(--danger-dim);color:var(--danger)}
+.pdf-del{background:none;border:none;color:var(--muted2);font-size:14px;padding:3px 6px;transition:color .15s}
+.pdf-del:hover{color:var(--danger)}
+/* RESUMOS */
+.resumos-layout{display:grid;grid-template-columns:220px 1fr;gap:16px}
+.topicos-nav{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);overflow:hidden;height:fit-content;position:sticky;top:0}
+.topicos-nav-header{padding:10px 14px;border-bottom:1px solid var(--border);font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted2);font-weight:500}
+.topico-nav-item{padding:10px 14px;cursor:pointer;font-size:13px;color:var(--muted);transition:all .15s;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;line-height:1.4}
+.topico-nav-item:last-child{border-bottom:none}
+.topico-nav-item:hover{background:var(--surface2);color:var(--text)}
+.topico-nav-item.active{background:var(--accent-dim);color:var(--accent)}
+.t-dot{width:6px;height:6px;border-radius:50%;background:currentColor;flex-shrink:0;opacity:.5}
+.topico-nav-item.active .t-dot{opacity:1}
+.topico-content{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1.5rem}
+.topico-content h3{font-size:18px;font-weight:700;margin-bottom:1rem}
+.topico-content p{font-size:14px;color:var(--muted);line-height:1.85;white-space:pre-wrap}
+.expand-btn-big{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--r-sm);font-size:13px;font-weight:500;margin-top:1.25rem;transition:all .2s}
+.expand-btn-big:hover:not(:disabled){background:rgba(200,241,53,.2)}
+.expand-btn-big:disabled{opacity:.5;cursor:not-allowed}
+.empty-state{text-align:center;padding:3rem 0;color:var(--muted)}
+.empty-state small{display:block;font-size:12px;color:var(--muted2);margin-top:5px}
+.dots{display:inline-flex;gap:3px;align-items:center}
+.dots span{width:4px;height:4px;border-radius:50%;background:var(--muted);animation:blink 1.2s infinite}
+.dots span:nth-child(2){animation-delay:.2s}
+.dots span:nth-child(3){animation-delay:.4s}
+@keyframes blink{0%,80%,100%{opacity:.2}40%{opacity:1}}
+/* ADMIN */
+.admin-body{flex:1;padding:2rem;overflow-y:auto;max-width:900px;margin:0 auto;width:100%}
+.admin-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem}
+.admin-head h2{font-size:22px;font-weight:700}
+.stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:1.5rem}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:1rem 1.25rem}
+.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:6px}
+.stat-value{font-size:30px;font-weight:800;font-family:'Syne',sans-serif;color:var(--text);line-height:1}
+.stat-sub{font-size:11px;color:var(--muted);margin-top:4px}
+.admin-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:1.25rem;overflow:hidden}
+.admin-section-header{padding:1rem 1.25rem;border-bottom:1px solid var(--border)}
+.admin-section-header h3{font-size:14px;font-weight:600}
+.pix-config{padding:1.25rem}
+.pix-config p{font-size:13px;color:var(--muted);margin-bottom:10px}
+.pix-row{display:flex;gap:8px}
+.pix-row input{flex:1;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:13px;outline:none}
+.pix-row input:focus{border-color:var(--accent-border)}
+.pix-row button{padding:9px 18px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--r-sm);font-size:13px;font-weight:500}
+.users-table{width:100%;border-collapse:collapse}
+.users-table th{padding:10px 14px;text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+.users-table td{padding:12px 14px;font-size:13px;border-bottom:1px solid var(--border);vertical-align:middle}
+.users-table tr:last-child td{border-bottom:none}
+.users-table tbody tr:hover td{background:var(--surface2)}
+.toggle-btn{padding:5px 13px;font-size:11px;font-weight:600;border-radius:20px;border:none;transition:all .2s;font-family:'Syne',sans-serif}
+.toggle-on{background:var(--danger-dim);color:var(--danger)}
+.toggle-on:hover{background:rgba(248,113,113,.2)}
+.toggle-off{background:var(--success-dim);color:var(--success)}
+.toggle-off:hover{background:rgba(74,222,128,.2)}
+/* MODAL */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,0.75);display:none;align-items:center;justify-content:center;z-index:1000;padding:1rem}
+.modal-bg.open{display:flex}
+.modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;padding:1.5rem;width:100%;max-width:360px}
+.modal-box h3{font-size:16px;font-weight:700;margin-bottom:1rem}
+.modal-input{width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:var(--r-sm);color:var(--text);font-size:14px;outline:none;margin-bottom:10px}
+.modal-input:focus{border-color:var(--accent-border)}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:4px}
+.modal-btns button{padding:7px 16px;font-size:13px;border-radius:var(--r-sm);border:1px solid var(--border2);background:transparent;color:var(--text);transition:all .2s}
+.modal-btns .modal-confirm{background:var(--accent);color:#0a0a0f;border:none;font-weight:700;font-family:'Syne',sans-serif}
+.modal-btns .modal-confirm:hover{background:#b8e020}
+.color-picker-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.color-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;transition:all .15s;flex-shrink:0}
+.color-opt.selected{border-color:#fff;transform:scale(1.18)}
 </style>
 </head>
 <body>
 <div id="app">
 
-<!-- ══════════════════════════════
-     PAGE: AUTH
-══════════════════════════════ -->
+<!-- AUTH -->
 <div id="page-auth" class="page active">
   <div class="auth-container">
     <div class="auth-brand">
@@ -298,7 +194,6 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     </div>
     <div class="auth-card">
       <p class="auth-subtitle">Acesso exclusivo para alunos cadastrados.</p>
-
       <div class="form-group">
         <label>E-mail</label>
         <input class="form-input" type="email" id="l-email" placeholder="seu@email.com">
@@ -308,15 +203,12 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
         <input class="form-input" type="password" id="l-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()">
       </div>
       <button class="btn-primary" id="btn-login" onclick="doLogin()">Entrar</button>
-
       <div class="auth-msg" id="auth-msg"></div>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     PAGE: BLOCKED
-══════════════════════════════ -->
+<!-- BLOCKED -->
 <div id="page-blocked" class="page">
   <nav class="topnav">
     <div class="nav-logo">gabarito</div>
@@ -329,21 +221,19 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     <div class="blocked-card">
       <div class="blocked-icon" id="blocked-icon-el">🔒</div>
       <h2 id="blocked-title-el">Acesso pendente</h2>
-      <p id="blocked-desc-el">Sua conta foi criada com sucesso! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.</p>
+      <p id="blocked-desc-el">Sua conta foi criada! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação.</p>
       <div class="pix-box" id="blocked-pix-box">
         <h4>💸 Como ativar seu acesso</h4>
         <p>Envie <strong style="color:var(--text)">R$ 15,00</strong> via Pix para a chave:</p>
         <code class="pix-value" id="blocked-pix-display">carregando...</code>
-        <p style="margin-top:10px">Coloque seu <strong style="color:var(--text)">e-mail</strong> na mensagem do Pix para identificarmos seu pagamento.</p>
+        <p style="margin-top:10px">Coloque seu <strong style="color:var(--text)">e-mail</strong> na mensagem do Pix.</p>
       </div>
-      <p class="blocked-footer">Após a confirmação, faça login novamente para acessar.</p>
+      <p class="blocked-footer">Após a confirmação, faça login novamente.</p>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     PAGE: APP
-══════════════════════════════ -->
+<!-- APP -->
 <div id="page-app" class="page">
   <nav class="topnav">
     <div class="nav-logo">gabarito</div>
@@ -353,36 +243,35 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
       <button class="nav-btn" onclick="doLogout()">Sair</button>
     </div>
   </nav>
-  <div class="app-layout">
-    <aside class="sidebar">
-      <div class="sidebar-top">
-        <div class="sidebar-section-label">Matérias</div>
-        <div id="mat-list"></div>
-        <div class="sidebar-add" onclick="openMatModal()">
-          <span style="font-size:17px;line-height:1;color:var(--muted2)">+</span>
-          <span>Nova matéria</span>
-        </div>
+  <!-- HOME -->
+  <div class="app-home" id="app-home">
+    <div class="welcome-header">
+      <h2 id="welcome-msg">Olá! O que vamos estudar hoje?</h2>
+      <p>Selecione uma matéria ou crie uma nova para começar.</p>
+    </div>
+    <div class="materias-grid" id="materias-grid">
+      <div style="color:var(--muted);font-size:13px">Carregando...</div>
+    </div>
+  </div>
+  <!-- MATERIA VIEW -->
+  <div class="materia-view hidden" id="materia-view">
+    <div class="materia-header">
+      <button class="back-link" onclick="voltarHome()">← Voltar</button>
+      <div class="materia-header-dot" id="mv-cor"></div>
+      <div style="flex:1;min-width:0">
+        <h2 id="mv-nome"></h2>
+        <p id="mv-desc"></p>
       </div>
-      <div class="sidebar-bottom">
-        <label>Chave API Claude</label>
-        <div class="api-row">
-          <input class="api-input" type="password" id="api-key-field" placeholder="sk-ant-...">
-          <button class="api-save-btn" onclick="saveApiKey()">OK</button>
-        </div>
-      </div>
-    </aside>
-    <main class="content" id="main-content">
-      <div class="empty-state" style="padding-top:4rem">
-        Selecione ou crie uma matéria
-        <small>Use a barra lateral à esquerda</small>
-      </div>
-    </main>
+    </div>
+    <div class="materia-tabs">
+      <button class="m-tab active" id="tab-pdfs-btn" onclick="switchMTab('pdfs')">PDFs</button>
+      <button class="m-tab" id="tab-resumos-btn" onclick="switchMTab('resumos')">Resumos</button>
+    </div>
+    <div class="materia-body" id="materia-body"></div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     PAGE: ADMIN
-══════════════════════════════ -->
+<!-- ADMIN -->
 <div id="page-admin" class="page">
   <nav class="topnav">
     <div class="nav-logo">gabarito <span style="font-size:11px;color:var(--muted);font-family:'DM Sans'">admin</span></div>
@@ -392,73 +281,72 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     </div>
   </nav>
   <div class="admin-body">
-    <div class="admin-head">
-      <h2>Painel de controle</h2>
-      <span class="tag tag-accent">Admin</span>
-    </div>
-
-    <div class="stats-grid" id="admin-stats">
+    <div class="admin-head"><h2>Painel de controle</h2><span class="tag tag-accent">Admin</span></div>
+    <div class="stats-grid">
       <div class="stat-card"><div class="stat-label">Total usuários</div><div class="stat-value" id="stat-total">—</div></div>
       <div class="stat-card"><div class="stat-label">Ativos (pagantes)</div><div class="stat-value" id="stat-active">—</div><div class="stat-sub" id="stat-revenue">—</div></div>
       <div class="stat-card"><div class="stat-label">Aguardando</div><div class="stat-value" id="stat-pending">—</div></div>
     </div>
-
     <div class="admin-section">
       <div class="admin-section-header"><h3>Configuração do Pix</h3></div>
       <div class="pix-config">
-        <p>Esta chave aparece na tela de todos os usuários que ainda não pagaram.</p>
+        <p>Esta chave aparece para todos os usuários que ainda não ativaram o acesso.</p>
         <div class="pix-row">
           <input type="text" id="pix-key-field" placeholder="CPF, e-mail, telefone ou chave aleatória">
           <button onclick="savePixKey()">Salvar</button>
         </div>
       </div>
     </div>
-
     <div class="admin-section">
       <div class="admin-section-header" style="display:flex;align-items:center;justify-content:space-between">
         <h3>Usuários cadastrados</h3>
         <button onclick="openNewUserModal()" style="padding:6px 14px;background:var(--accent-dim);color:var(--accent);border:1px solid var(--accent-border);border-radius:var(--r-sm);font-size:12px;font-weight:500">+ Novo aluno</button>
       </div>
       <table class="users-table">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Nome / E-mail</th>
-            <th>Tipo</th>
-            <th>Cadastro</th>
-            <th>Status</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-        <tbody id="users-tbody">
-          <tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Carregando...</td></tr>
-        </tbody>
+        <thead><tr><th>#</th><th>Nome / E-mail</th><th>Tipo</th><th>Cadastro</th><th>Status</th><th>Ações</th></tr></thead>
+        <tbody id="users-tbody"><tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Carregando...</td></tr></tbody>
       </table>
     </div>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     MODAL EDITAR ALUNO
-══════════════════════════════ -->
+<!-- MODAL NOVA MATÉRIA -->
+<div class="modal-bg" id="mat-modal">
+  <div class="modal-box" style="max-width:400px">
+    <h3>Nova matéria</h3>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome da matéria</label>
+      <input class="modal-input" style="margin-bottom:0" type="text" id="mat-nome" placeholder="Ex: Cálculo II, Direito Civil...">
+    </div>
+    <div style="margin-bottom:10px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Descrição <span style="color:var(--muted2)">(opcional)</span></label>
+      <input class="modal-input" style="margin-bottom:0" type="text" id="mat-desc" placeholder="Ex: 2º semestre, Prof. João...">
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:8px">Cor</label>
+      <div class="color-picker-row" id="color-picker"></div>
+    </div>
+    <div class="modal-btns">
+      <button onclick="closeMatModal()">Cancelar</button>
+      <button class="modal-confirm" onclick="confirmMat()">Criar matéria</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL EDITAR ALUNO -->
 <div class="modal-bg" id="edit-modal">
   <div class="modal-box">
     <h3>Editar aluno</h3>
     <input type="hidden" id="edit-user-id">
-    <input type="hidden" id="edit-user-active">
-    <div class="form-group" style="margin-bottom:10px">
+    <div style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome</label>
-      <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-name" placeholder="Nome completo">
+      <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-name">
     </div>
-    <div class="form-group" style="margin-bottom:10px">
+    <div style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">E-mail</label>
-      <input class="modal-input" style="margin-bottom:0" type="email" id="edit-user-email" placeholder="email@exemplo.com">
+      <input class="modal-input" style="margin-bottom:0" type="email" id="edit-user-email">
     </div>
-    <div class="form-group" style="margin-bottom:10px">
-      <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nova senha <span style="color:var(--muted2)">(deixe em branco para não alterar)</span></label>
-      <input class="modal-input" style="margin-bottom:0" type="text" id="edit-user-pass" placeholder="Mínimo 6 caracteres">
-    </div>
-    <div class="form-group" style="margin-bottom:12px">
+    <div style="margin-bottom:12px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Status de acesso</label>
       <select class="modal-input" style="margin-bottom:0" id="edit-user-status">
         <option value="true">✅ Ativo — pode acessar o site</option>
@@ -472,37 +360,25 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
     <div id="edit-modal-msg" style="font-size:12px;margin-top:8px;text-align:center;min-height:16px"></div>
   </div>
 </div>
-<div class="modal-bg" id="mat-modal">
-  <div class="modal-box">
-    <h3>Nova matéria</h3>
-    <input class="modal-input" type="text" id="mat-name-input" placeholder="Ex: Cálculo II, Física, Direito Civil..." onkeydown="if(event.key==='Enter')confirmMat()">
-    <div class="modal-btns">
-      <button onclick="closeModal()">Cancelar</button>
-      <button class="modal-confirm" onclick="confirmMat()">Criar</button>
-    </div>
-  </div>
-</div>
 
-<!-- ══════════════════════════════
-     MODAL NOVO ALUNO
-══════════════════════════════ -->
+<!-- MODAL NOVO ALUNO -->
 <div class="modal-bg" id="user-modal">
   <div class="modal-box">
     <h3>Cadastrar novo aluno</h3>
-    <div class="form-group" style="margin-bottom:10px">
+    <div style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Nome</label>
-      <input class="modal-input" style="margin-bottom:0" type="text" id="new-user-name" placeholder="Nome completo do aluno">
+      <input class="modal-input" style="margin-bottom:0" type="text" id="new-user-name" placeholder="Nome completo">
     </div>
-    <div class="form-group" style="margin-bottom:10px">
+    <div style="margin-bottom:10px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">E-mail</label>
       <input class="modal-input" style="margin-bottom:0" type="email" id="new-user-email" placeholder="email@exemplo.com">
     </div>
-    <div class="form-group" style="margin-bottom:12px">
+    <div style="margin-bottom:12px">
       <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:5px">Senha inicial</label>
       <input class="modal-input" style="margin-bottom:0" type="text" id="new-user-pass" placeholder="Mínimo 6 caracteres">
     </div>
     <div style="font-size:11px;color:var(--muted);background:var(--surface2);padding:8px 10px;border-radius:var(--r-sm);margin-bottom:12px;line-height:1.5">
-      Anote e envie o e-mail e senha para o aluno. Ele poderá trocar a senha depois.
+      Anote e envie o e-mail e senha para o aluno.
     </div>
     <div class="modal-btns">
       <button onclick="closeUserModal()">Cancelar</button>
@@ -513,638 +389,440 @@ input, textarea, select { font-family: 'DM Sans', sans-serif; }
 </div>
 
 <script>
-// ══════════════════════════════════════
-// CONFIGURAÇÃO
-// ══════════════════════════════════════
-const SUPABASE_URL  = 'https://kzjwmwgpieavrclmfegm.supabase.co';
-const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6andtd2dwaWVhdnJjbG1mZWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzI3MzQsImV4cCI6MjA5MjU0ODczNH0.UxFblYKp7keC4YWwx32XDG9Igeb6G7fZNVXV-2cN-jQ';
-const ADMIN_EMAIL   = 'pivagustavo959@gmail.com';
+const SUPABASE_URL = 'https://kzjwmwgpieavrclmfegm.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt6andtd2dwaWVhdnJjbG1mZWdtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzY5NzI3MzQsImV4cCI6MjA5MjU0ODczNH0.UxFblYKp7keC4YWwx32XDG9Igeb6G7fZNVXV-2cN-jQ';
+const ADMIN_EMAIL  = 'pivagustavo959@gmail.com';
+const CORES = ['#6366f1','#8b5cf6','#ec4899','#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#06b6d4'];
 
 pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ══════════════════════════════════════
-// STATE
-// ══════════════════════════════════════
-let currentUser = null;
-let currentMat  = null;
-let currentDiff = 'facil';
-let ld = {};  // localStorage data
+let currentUser    = null;
+let currentMateria = null;
+let currentMTab    = 'pdfs';
+let selectedColor  = CORES[0];
+let topicoAtivo    = null;
 
-function loadLD()  { try { return JSON.parse(localStorage.getItem('gabarito_v1') || '{}'); } catch { return {}; } }
-function saveLD()  { localStorage.setItem('gabarito_v1', JSON.stringify(ld)); }
-function getKey()  { return ld.apiKey || ''; }
-function getMats() {
-  if (!currentUser) return {};
-  if (!ld[currentUser.id]) ld[currentUser.id] = { materias: {} };
-  return ld[currentUser.id].materias;
-}
-
-// ══════════════════════════════════════
-// PAGE CONTROL
-// ══════════════════════════════════════
+// PAGES
 function showPage(id) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.getElementById('page-' + id).classList.add('active');
+  document.getElementById('page-'+id).classList.add('active');
 }
 function showAdmin() {
-  if (!currentUser || currentUser.email !== ADMIN_EMAIL) {
-    showPage('app');
-    return;
-  }
-  loadAdminData();
-  showPage('admin');
+  if (!currentUser || currentUser.email !== ADMIN_EMAIL) return;
+  loadAdminData(); showPage('admin');
 }
-function showApp() { showPage('app'); }
+function showApp() { showPage('app'); showHome(); }
+function showHome() {
+  document.getElementById('app-home').classList.remove('hidden');
+  document.getElementById('materia-view').classList.add('hidden');
+  topicoAtivo = null;
+  loadMaterias();
+}
+function showMateriaView(mat) {
+  currentMateria = mat;
+  topicoAtivo = null;
+  document.getElementById('app-home').classList.add('hidden');
+  document.getElementById('materia-view').classList.remove('hidden');
+  document.getElementById('mv-nome').textContent = mat.nome;
+  document.getElementById('mv-desc').textContent = mat.descricao || '';
+  document.getElementById('mv-cor').style.background = mat.cor || CORES[0];
+  switchMTab('pdfs');
+}
+function voltarHome() { showHome(); }
+function switchMTab(tab) {
+  currentMTab = tab;
+  ['pdfs','resumos'].forEach(t => document.getElementById('tab-'+t+'-btn').classList.toggle('active', t===tab));
+  renderMateriaBody();
+}
 
-// ══════════════════════════════════════
 // AUTH
-// ══════════════════════════════════════
 function setMsg(msg, type='error') {
   const el = document.getElementById('auth-msg');
   el.textContent = msg;
-  el.className = 'auth-msg' + (msg ? ' ' + type : '');
+  el.className = 'auth-msg'+(msg?' '+type:'');
 }
-
 async function doLogin() {
   const email = document.getElementById('l-email').value.trim();
   const pass  = document.getElementById('l-pass').value;
-  if (!email || !pass) { setMsg('Preencha e-mail e senha.'); return; }
+  if (!email||!pass) { setMsg('Preencha e-mail e senha.'); return; }
   const btn = document.getElementById('btn-login');
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  const { data, error } = await sb.auth.signInWithPassword({ email, password: pass });
-  btn.disabled = false; btn.textContent = 'Entrar';
+  btn.disabled=true; btn.textContent='Entrando...';
+  const {data,error} = await sb.auth.signInWithPassword({email,password:pass});
+  btn.disabled=false; btn.textContent='Entrar';
   if (error) { setMsg('E-mail ou senha incorretos.'); return; }
   await initSession(data.user);
 }
-
+async function doLogout() {
+  await sb.auth.signOut();
+  currentUser=null; currentMateria=null;
+  showPage('auth');
+}
 async function showBlockedPage(email, reason) {
   document.getElementById('blocked-email-display').textContent = email;
-  const { data: setting } = await sb.from('settings').select('value').eq('key','pix_key').single();
-  const pixKey = setting?.value || 'Entre em contato com o administrador.';
-
-  if (reason === 'blocked') {
-    document.getElementById('blocked-pix-display').textContent = pixKey;
-    document.getElementById('blocked-icon-el').textContent = '🚫';
-    document.getElementById('blocked-title-el').textContent = 'Acesso bloqueado';
-    document.getElementById('blocked-desc-el').textContent = 'Seu acesso foi suspenso. Entre em contato com o suporte do site para mais informações.';
+  const {data:s} = await sb.from('settings').select('value').eq('key','pix_key').single();
+  document.getElementById('blocked-pix-display').textContent = s?.value||'Entre em contato com o administrador.';
+  if (reason==='blocked') {
+    document.getElementById('blocked-icon-el').textContent='🚫';
+    document.getElementById('blocked-title-el').textContent='Acesso bloqueado';
+    document.getElementById('blocked-desc-el').textContent='Seu acesso foi suspenso. Entre em contato com o suporte do site para mais informações.';
     document.getElementById('blocked-pix-box').classList.add('hidden');
   } else {
-    document.getElementById('blocked-pix-display').textContent = pixKey;
-    document.getElementById('blocked-icon-el').textContent = '🔒';
-    document.getElementById('blocked-title-el').textContent = 'Acesso pendente';
-    document.getElementById('blocked-desc-el').textContent = 'Sua conta foi criada! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.';
+    document.getElementById('blocked-icon-el').textContent='🔒';
+    document.getElementById('blocked-title-el').textContent='Acesso pendente';
+    document.getElementById('blocked-desc-el').textContent='Sua conta foi criada! Para liberar o acesso, envie o Pix abaixo e aguarde a confirmação — normalmente em poucas horas.';
     document.getElementById('blocked-pix-box').classList.remove('hidden');
   }
   showPage('blocked');
 }
-
-async function doLogout() {
-  await sb.auth.signOut();
-  currentUser = null; currentMat = null;
-  showPage('auth');
-}
-
 async function initSession(user) {
   currentUser = user;
-  ld = loadLD();
-  if (ld.apiKey) document.getElementById('api-key-field').value = ld.apiKey;
-
-  if (user.email === ADMIN_EMAIL) {
+  if (user.email===ADMIN_EMAIL) {
     document.getElementById('btn-go-admin').classList.remove('hidden');
-    document.getElementById('app-email-display').textContent = user.email;
-    renderSidebar();
-    showPage('app');
-    return;
+    document.getElementById('app-email-display').textContent=user.email;
+    document.getElementById('welcome-msg').textContent='Olá, Gustavo! O que vamos estudar hoje?';
+    showPage('app'); showHome(); return;
   }
-
-  const { data: profile } = await sb.from('profiles').select('active, blocked').eq('id', user.id).single();
-
-  if (profile?.blocked) {
-    showBlockedPage(user.email, 'blocked');
-    return;
-  }
-
-  if (!profile?.active) {
-    showBlockedPage(user.email, 'pending');
-    return;
-  }
-
-  document.getElementById('app-email-display').textContent = user.email;
+  const {data:profile} = await sb.from('profiles').select('active,blocked,name').eq('id',user.id).single();
+  if (profile?.blocked) { showBlockedPage(user.email,'blocked'); return; }
+  if (!profile?.active) { showBlockedPage(user.email,'pending'); return; }
+  const nome = profile?.name||user.email.split('@')[0];
+  const primeiro = nome.split(' ')[0];
+  document.getElementById('welcome-msg').textContent=`Olá, ${primeiro}! O que vamos estudar hoje?`;
+  document.getElementById('app-email-display').textContent=user.email;
   document.getElementById('btn-go-admin').classList.add('hidden');
-  renderSidebar();
-  showPage('app');
+  showPage('app'); showHome();
 }
+sb.auth.getSession().then(({data})=>{ if(data?.session?.user) initSession(data.session.user); });
 
-// Auto-login se já tiver sessão
-sb.auth.getSession().then(({ data }) => {
-  if (data?.session?.user) initSession(data.session.user);
-});
-
-// ══════════════════════════════════════
-// SIDEBAR
-// ══════════════════════════════════════
-function renderSidebar() {
-  const mats  = getMats();
-  const names = Object.keys(mats);
-  const el    = document.getElementById('mat-list');
-  if (!names.length) {
-    el.innerHTML = '<div style="padding:6px 10px;font-size:12px;color:var(--muted2)">Nenhuma matéria ainda</div>';
-    return;
+// MATÉRIAS
+async function loadMaterias() {
+  const el = document.getElementById('materias-grid');
+  el.innerHTML='<div style="color:var(--muted);font-size:13px">Carregando...</div>';
+  const {data:mats} = await sb.from('materias').select('*').eq('user_id',currentUser.id).order('created_at');
+  let html='';
+  if (mats?.length) {
+    html = mats.map(m=>`
+      <div class="materia-card" style="background:${m.cor||CORES[0]}" onclick='showMateriaView(${JSON.stringify(m)})'>
+        <div>
+          <h3>${m.nome}</h3>
+          ${m.descricao?`<p>${m.descricao}</p>`:''}
+        </div>
+        <div class="materia-card-bottom">
+          <span id="mc-${m.id}">...</span>
+          <button class="materia-card-del" onclick="event.stopPropagation();deletarMateria('${m.id}')" title="Excluir">✕</button>
+        </div>
+      </div>`).join('');
+    mats.forEach(m=>loadMatCount(m.id));
   }
-  el.innerHTML = names.map(n => {
-    const count  = mats[n].pdfs?.length || 0;
-    const active = currentMat === n;
-    return `<div class="mat-item ${active?'active':''}" onclick="selectMat('${esc(n)}')">
-      <span class="mat-name">${n}</span>
-      ${count ? `<span class="mat-count">${count}</span>` : ''}
-    </div>`;
-  }).join('');
+  html+=`<button class="add-materia-card" onclick="openMatModal()"><span>+</span><p>Nova matéria</p></button>`;
+  el.innerHTML=html;
+}
+async function loadMatCount(id) {
+  const [{count:p},{count:t}] = await Promise.all([
+    sb.from('pdfs').select('*',{count:'exact',head:true}).eq('materia_id',id),
+    sb.from('topicos').select('*',{count:'exact',head:true}).eq('materia_id',id)
+  ]);
+  const el=document.getElementById('mc-'+id);
+  if(el) el.textContent=`${p||0} PDF${p!==1?'s':''} · ${t||0} tópico${t!==1?'s':''}`;
+}
+async function deletarMateria(id) {
+  if(!confirm('Excluir esta matéria e todos os dados?')) return;
+  await sb.from('materias').delete().eq('id',id);
+  loadMaterias();
 }
 
-function esc(s) { return s.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;'); }
-
-function selectMat(name) {
-  currentMat = name;
-  renderSidebar();
-  renderMain();
+// COLOR PICKER
+function buildColorPicker() {
+  document.getElementById('color-picker').innerHTML=CORES.map(c=>
+    `<div class="color-opt ${c===selectedColor?'selected':''}" style="background:${c}" onclick="selectColor('${c}')"></div>`
+  ).join('');
 }
-
-function saveApiKey() {
-  const k = document.getElementById('api-key-field').value.trim();
-  if (!k) return;
-  ld.apiKey = k;
-  saveLD();
-  document.getElementById('api-key-field').placeholder = '✓ salva';
-  document.getElementById('api-key-field').value = '';
-}
-
-// ══════════════════════════════════════
-// MODAL
-// ══════════════════════════════════════
+function selectColor(c) { selectedColor=c; buildColorPicker(); }
 function openMatModal() {
-  document.getElementById('mat-name-input').value = '';
+  document.getElementById('mat-nome').value='';
+  document.getElementById('mat-desc').value='';
+  selectedColor=CORES[0]; buildColorPicker();
   document.getElementById('mat-modal').classList.add('open');
-  setTimeout(() => document.getElementById('mat-name-input').focus(), 50);
+  setTimeout(()=>document.getElementById('mat-nome').focus(),50);
 }
-function closeModal() { document.getElementById('mat-modal').classList.remove('open'); }
-function confirmMat() {
-  const name = document.getElementById('mat-name-input').value.trim();
-  if (!name) return;
-  const mats = getMats();
-  if (mats[name]) { alert('Já existe uma matéria com esse nome!'); return; }
-  mats[name] = { pdfs: [], resumos: [], questoes: { facil: [], medio: [], dificil: [] } };
-  saveLD();
-  closeModal();
-  renderSidebar();
-  selectMat(name);
+function closeMatModal() { document.getElementById('mat-modal').classList.remove('open'); }
+async function confirmMat() {
+  const nome=document.getElementById('mat-nome').value.trim();
+  const desc=document.getElementById('mat-desc').value.trim();
+  if(!nome){alert('Digite o nome da matéria.');return;}
+  const {error}=await sb.from('materias').insert({user_id:currentUser.id,nome,descricao:desc,cor:selectedColor});
+  if(error){alert('Erro: '+error.message);return;}
+  closeMatModal(); loadMaterias();
 }
 
-// ══════════════════════════════════════
-// MAIN CONTENT
-// ══════════════════════════════════════
-function renderMain() {
-  if (!currentMat) return;
-  const mat    = getMats()[currentMat];
-  const pdfs   = mat.pdfs || [];
-  const hasData = mat.resumos?.length || mat.questoes?.facil?.length;
-  const el     = document.getElementById('main-content');
-
-  el.innerHTML = `
-    <div class="content-title">${currentMat}</div>
-    <div class="content-sub">${pdfs.length} PDF${pdfs.length !== 1 ? 's' : ''} carregado${pdfs.length !== 1 ? 's' : ''}</div>
-
-    <div class="upload-zone" onclick="document.getElementById('pdf-file-input').click()">
-      <strong>+ Adicionar PDFs ou slides</strong>
-      <p>Clique para selecionar arquivos .pdf — pode adicionar vários de uma vez</p>
-      <input type="file" id="pdf-file-input" accept=".pdf" multiple style="display:none" onchange="handlePDFs(this)">
-    </div>
-
-    <div id="pdf-list">${buildPdfList(pdfs)}</div>
-
-    ${pdfs.length ? `<button class="gen-btn" id="gen-btn" onclick="generateAll()">
-      ⚡ Gerar / atualizar resumos e questões
-    </button>` : ''}
-
-    ${hasData ? `
-    <div class="tabs">
-      <button class="tab-btn active" id="tab-r" onclick="switchTab('r')">Resumos</button>
-      <button class="tab-btn" id="tab-q" onclick="switchTab('q')">Questões</button>
-    </div>
-    <div id="tab-content"></div>` : ''}
-  `;
-
-  if (hasData) renderResumosTab();
+// MATERIA BODY
+function renderMateriaBody() {
+  if(currentMTab==='pdfs') renderPDFsTab();
+  else renderResumosTab();
 }
 
-function buildPdfList(pdfs) {
-  if (!pdfs.length) return '';
-  return pdfs.map((p, i) => `
-    <div class="pdf-item">
-      <div class="pdf-badge">PDF</div>
-      <div class="pdf-info">
-        <div class="pdf-name">${p.name}</div>
-        <div class="pdf-meta">${p.pages} pág. · adicionado em ${p.date}</div>
-      </div>
-      <button class="pdf-del" onclick="delPdf(${i})" title="Remover">✕</button>
-    </div>`).join('');
-}
-
-function delPdf(i) {
-  if (!confirm('Remover este PDF da matéria?')) return;
-  getMats()[currentMat].pdfs.splice(i, 1);
-  saveLD();
-  renderMain();
-}
-
-// ══════════════════════════════════════
-// PDF PROCESSING
-// ══════════════════════════════════════
-async function handlePDFs(input) {
-  const files = Array.from(input.files);
-  const mat   = getMats()[currentMat];
-  if (!mat.pdfs) mat.pdfs = [];
-  for (const f of files) {
-    if (mat.pdfs.find(p => p.name === f.name)) continue;
-    try {
-      const [text, pages] = await Promise.all([extractText(f), countPages(f)]);
-      mat.pdfs.push({ name: f.name, text: text.slice(0, 9000), pages, date: new Date().toLocaleDateString('pt-BR') });
-    } catch { alert('Erro ao ler: ' + f.name); }
+// PDFs TAB
+async function renderPDFsTab() {
+  const el=document.getElementById('materia-body');
+  el.innerHTML='<div style="color:var(--muted)">Carregando...</div>';
+  const {data:pdfs}=await sb.from('pdfs').select('*').eq('materia_id',currentMateria.id).order('created_at');
+  let html=`<div class="upload-zone" onclick="document.getElementById('pdf-input').click()">
+    <strong>+ Adicionar PDFs ou slides</strong>
+    <p>Clique para selecionar arquivos .pdf — pode adicionar vários de uma vez</p>
+    <input type="file" id="pdf-input" accept=".pdf" multiple style="display:none" onchange="handlePDFs(this)">
+  </div>`;
+  if(pdfs?.length) {
+    html+=pdfs.map(p=>`
+      <div class="pdf-item">
+        <div class="pdf-badge">PDF</div>
+        <div class="pdf-info">
+          <div class="pdf-name">${p.nome}</div>
+          <div class="pdf-meta">${p.paginas} pág. · ${new Date(p.created_at).toLocaleDateString('pt-BR')} <span class="pdf-status done">✓ Processado</span></div>
+        </div>
+        <button class="pdf-del" onclick="deletarPDF('${p.id}')">✕</button>
+      </div>`).join('');
+  } else {
+    html+='<div class="empty-state">Nenhum PDF ainda<small>Adicione arquivos para gerar resumos automaticamente</small></div>';
   }
-  saveLD();
-  renderMain();
+  el.innerHTML=html;
 }
-
+async function deletarPDF(id) {
+  if(!confirm('Remover este PDF?')) return;
+  await sb.from('pdfs').delete().eq('id',id);
+  renderPDFsTab();
+}
+async function handlePDFs(input) {
+  const files=Array.from(input.files);
+  const el=document.getElementById('materia-body');
+  for(const file of files) {
+    const item=document.createElement('div');
+    item.className='pdf-item';
+    item.innerHTML=`<div class="pdf-badge">PDF</div><div class="pdf-info"><div class="pdf-name">${file.name}</div><div class="pdf-meta"><span class="pdf-status processing">⏳ Processando com IA...</span></div></div>`;
+    el.appendChild(item);
+    try {
+      const [texto,paginas]=await Promise.all([extractText(file),countPages(file)]);
+      const {data:row,error}=await sb.from('pdfs').insert({
+        materia_id:currentMateria.id, user_id:currentUser.id,
+        nome:file.name, texto_extraido:texto.slice(0,15000), paginas
+      }).select().single();
+      if(error) throw error;
+      await gerarTopicos(row,texto);
+      item.remove();
+    } catch(e) {
+      item.querySelector('.pdf-meta').innerHTML='<span class="pdf-status error">✕ Erro ao processar — '+e.message+'</span>';
+    }
+  }
+  renderPDFsTab();
+}
 async function extractText(file) {
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument(new Uint8Array(buf)).promise;
-  let t = '';
-  for (let i = 1; i <= Math.min(pdf.numPages, 25); i++) {
-    const page = await pdf.getPage(i);
-    const c    = await page.getTextContent();
-    t += c.items.map(s => s.str).join(' ') + '\n';
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument(new Uint8Array(buf)).promise;
+  let t='';
+  for(let i=1;i<=Math.min(pdf.numPages,25);i++){
+    const page=await pdf.getPage(i);
+    const c=await page.getTextContent();
+    t+=c.items.map(s=>s.str).join(' ')+'\n';
   }
   return t.trim();
 }
-
 async function countPages(file) {
-  const buf = await file.arrayBuffer();
-  const pdf = await pdfjsLib.getDocument(new Uint8Array(buf)).promise;
+  const buf=await file.arrayBuffer();
+  const pdf=await pdfjsLib.getDocument(new Uint8Array(buf)).promise;
   return pdf.numPages;
 }
 
-// ══════════════════════════════════════
 // AI
-// ══════════════════════════════════════
 async function callAI(prompt, sys) {
-  const key = getKey();
-  if (!key) throw new Error('no_key');
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
+  const r = await fetch('/api/chat', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      model: 'claude-haiku-4-5-20251001',
-      max_tokens: 1500,
       system: sys || 'Responda SOMENTE em JSON válido, sem markdown, sem texto fora do JSON.',
-      messages: [{ role: 'user', content: prompt }]
+      messages: [{ role: 'user', content: prompt }],
+      max_tokens: 2000
     })
   });
   const d = await r.json();
+  if (d.error) throw new Error(d.error);
   return d.content?.[0]?.text || '';
 }
 
-function getContext() {
-  return (getMats()[currentMat]?.pdfs || []).map(p => p.text).join('\n\n---\n\n').slice(0, 12000);
-}
-
-async function generateAll() {
-  const key = getKey();
-  if (!key) { alert('Configure sua chave de API Claude na barra lateral antes de gerar!'); return; }
-  const mat = getMats()[currentMat];
-  if (!mat.pdfs?.length) { alert('Adicione pelo menos um PDF primeiro!'); return; }
-  const btn = document.getElementById('gen-btn');
-  btn.disabled = true;
-  btn.innerHTML = 'Gerando <span class="dots"><span></span><span></span><span></span></span>';
-  const ctx = getContext();
-  await Promise.all([genResumos(ctx), genQuestoes(ctx)]);
-  saveLD();
-  renderMain();
-}
-
-async function genResumos(ctx) {
+async function gerarTopicos(pdfRow,texto) {
   try {
-    const t = await callAI(`Analise o conteúdo de "${currentMat}" e retorne JSON com os 5 principais tópicos para estudo.\nFormato: {"topicos":[{"titulo":"...","resumo":"2-3 frases de resumo"}]}\n\nConteúdo:\n${ctx}`);
-    getMats()[currentMat].resumos = JSON.parse(t.replace(/```json|```/g,'').trim()).topicos || [];
-  } catch { getMats()[currentMat].resumos = []; }
+    const t=await callAI(
+      `Analise este conteúdo e extraia os 6 principais tópicos de estudo da matéria "${currentMateria.nome}". Para cada tópico escreva um resumo claro de 3-4 frases. Retorne JSON: {"topicos":[{"titulo":"...","resumo":"..."}]}\n\nConteúdo:\n${texto.slice(0,10000)}`
+    );
+    const parsed=JSON.parse(t.replace(/```json|```/g,'').trim());
+    const rows=(parsed.topicos||[]).map((top,i)=>({
+      materia_id:currentMateria.id, user_id:currentUser.id,
+      titulo:top.titulo, resumo:top.resumo, ordem:i
+    }));
+    if(rows.length) await sb.from('topicos').insert(rows);
+  } catch(e){console.error('Erro ao gerar tópicos:',e);}
 }
 
-async function genQuestoes(ctx) {
-  const mat = getMats()[currentMat];
-  if (!mat.questoes) mat.questoes = {};
-  const diffs = [
-    { key: 'facil',   label: 'fácil (conceitos básicos, definições)' },
-    { key: 'medio',   label: 'médio (aplicação e compreensão)' },
-    { key: 'dificil', label: 'difícil (análise, síntese, casos complexos)' }
-  ];
-  await Promise.all(diffs.map(async d => {
-    try {
-      const t = await callAI(`Gere 3 questões dissertativas de dificuldade ${d.label} sobre "${currentMat}".\nJSON: {"questoes":["questão 1","questão 2","questão 3"]}\n\nConteúdo:\n${ctx}`);
-      mat.questoes[d.key] = JSON.parse(t.replace(/```json|```/g,'').trim()).questoes || [];
-    } catch { mat.questoes[d.key] = []; }
-  }));
-}
-
-// ══════════════════════════════════════
-// TABS
-// ══════════════════════════════════════
-function switchTab(t) {
-  ['r','q'].forEach(x => document.getElementById('tab-'+x)?.classList.toggle('active', x===t));
-  t === 'r' ? renderResumosTab() : renderQuestoesTab();
-}
-
-// ══════════════════════════════════════
-// RESUMOS
-// ══════════════════════════════════════
-function renderResumosTab() {
-  const el     = document.getElementById('tab-content');
-  if (!el) return;
-  const resumos = getMats()[currentMat]?.resumos || [];
-  if (!resumos.length) {
-    el.innerHTML = '<div class="empty-state">Nenhum resumo ainda<small>Clique em "Gerar" acima</small></div>';
+// RESUMOS TAB
+async function renderResumosTab() {
+  const el=document.getElementById('materia-body');
+  el.innerHTML='<div style="color:var(--muted)">Carregando tópicos...</div>';
+  const {data:topicos}=await sb.from('topicos').select('*').eq('materia_id',currentMateria.id).order('ordem');
+  if(!topicos?.length) {
+    el.innerHTML='<div class="empty-state">Nenhum tópico ainda<small>Adicione PDFs na aba PDFs para gerar os resumos automaticamente</small></div>';
     return;
   }
-  el.innerHTML = resumos.map((r, i) => `
-    <div class="topic-card">
-      <div class="topic-header">
-        <div class="topic-title">${r.titulo}</div>
-        <button class="expand-btn" onclick="expandTopic(${i})">expandir ↗</button>
-      </div>
-      <p class="topic-text" id="topic-text-${i}">${r.resumo}</p>
-    </div>`).join('');
-}
-
-async function expandTopic(i) {
-  const mat = getMats()[currentMat];
-  const r   = mat.resumos[i];
-  const el  = document.getElementById('topic-text-' + i);
-  if (r._exp) { el.textContent = r.resumo; r._exp = false; return; }
-  el.innerHTML = '<span style="color:var(--muted2)">Aprofundando o tópico...</span>';
-  try {
-    const ctx = getContext().slice(0, 6000);
-    const t   = await callAI(
-      `Escreva um texto de estudo detalhado em português (cerca de 200 palavras) sobre "${r.titulo}" da matéria ${currentMat}. Seja claro e objetivo para estudantes universitários.\n\nContexto do material:\n${ctx}`,
-      'Você é um professor universitário. Responda em português com linguagem clara e didática.'
-    );
-    el.textContent = t;
-    r._exp = true;
-    r._expText = t;
-  } catch { el.textContent = r.resumo; }
-}
-
-// ══════════════════════════════════════
-// QUESTÕES
-// ══════════════════════════════════════
-function renderQuestoesTab() {
-  const el = document.getElementById('tab-content');
-  if (!el) return;
-  el.innerHTML = `
-    <div class="diff-row">
-      <button class="diff-pill facil ${currentDiff==='facil'?'on':''}" onclick="setDiff('facil',this)">Fácil</button>
-      <button class="diff-pill medio ${currentDiff==='medio'?'on':''}" onclick="setDiff('medio',this)">Médio</button>
-      <button class="diff-pill dificil ${currentDiff==='dificil'?'on':''}" onclick="setDiff('dificil',this)">Difícil</button>
+  window._topicos=topicos;
+  if(!topicoAtivo) topicoAtivo=topicos[0];
+  el.innerHTML=`<div class="resumos-layout">
+    <div class="topicos-nav">
+      <div class="topicos-nav-header">Tópicos</div>
+      ${topicos.map(t=>`
+        <div class="topico-nav-item ${topicoAtivo?.id===t.id?'active':''}" id="tnav-${t.id}" onclick="selecionarTopico('${t.id}')">
+          <span class="t-dot"></span>${t.titulo}
+        </div>`).join('')}
     </div>
-    <div id="q-list"></div>`;
-  renderQList();
+    <div id="topico-content-area"></div>
+  </div>`;
+  renderTopicoConteudo(topicoAtivo);
 }
 
-function setDiff(d, btn) {
-  currentDiff = d;
-  document.querySelectorAll('.diff-pill').forEach(b => b.classList.remove('on'));
-  btn.classList.add('on');
-  renderQList();
+function selecionarTopico(id) {
+  const top=window._topicos?.find(t=>t.id===id);
+  if(!top) return;
+  topicoAtivo=top;
+  document.querySelectorAll('.topico-nav-item').forEach(e=>e.classList.remove('active'));
+  document.getElementById('tnav-'+id)?.classList.add('active');
+  renderTopicoConteudo(top);
 }
 
-function renderQList() {
-  const qs = getMats()[currentMat]?.questoes?.[currentDiff] || [];
-  const el = document.getElementById('q-list');
-  if (!el) return;
-  if (!qs.length) {
-    el.innerHTML = '<div class="empty-state">Nenhuma questão neste nível<small>Clique em "Gerar" acima</small></div>';
-    return;
-  }
-  el.innerHTML = qs.map((q, i) => `
-    <div class="q-card">
-      <div class="q-meta">${currentMat} · ${currentDiff} · questão ${i+1}</div>
-      <div class="q-text">${q}</div>
-      <textarea class="q-textarea" id="ans-${currentDiff}-${i}" placeholder="Digite sua resposta aqui..."></textarea>
-      <div class="q-footer">
-        <button class="q-submit" id="qbtn-${currentDiff}-${i}" onclick="avaliar(${i})">Avaliar resposta</button>
-      </div>
-      <div class="feedback-box" id="fb-${currentDiff}-${i}"></div>
-    </div>`).join('');
+function renderTopicoConteudo(top) {
+  const el=document.getElementById('topico-content-area');
+  if(!el) return;
+  const texto=top._expandido?(top.resumo_expandido||top.resumo):top.resumo;
+  el.innerHTML=`<div class="topico-content">
+    <h3>${top.titulo}</h3>
+    <p id="topico-texto">${texto||'...'}</p>
+    <button class="expand-btn-big" id="expand-btn" onclick="expandirTopico('${top.id}')">
+      ${top._expandido?'↩ Ver resumo':'↓ Aprofundar com IA'}
+    </button>
+  </div>`;
 }
 
-async function avaliar(i) {
-  const ans = document.getElementById(`ans-${currentDiff}-${i}`)?.value.trim();
-  if (!ans) { alert('Escreva sua resposta antes de avaliar!'); return; }
-  const q   = getMats()[currentMat].questoes[currentDiff][i];
-  const ctx = getContext().slice(0, 4000);
-  const btn = document.getElementById(`qbtn-${currentDiff}-${i}`);
-  btn.disabled = true;
-  btn.innerHTML = 'Avaliando <span class="dots"><span></span><span></span><span></span></span>';
+async function expandirTopico(id) {
+  const top=window._topicos?.find(t=>t.id===id);
+  if(!top) return;
+  if(top._expandido) { top._expandido=false; renderTopicoConteudo(top); return; }
+  if(top.resumo_expandido) { top._expandido=true; renderTopicoConteudo(top); return; }
+  const btn=document.getElementById('expand-btn');
+  if(btn){btn.disabled=true;btn.innerHTML='Gerando <span class="dots"><span></span><span></span><span></span></span>';}
   try {
-    const t = await callAI(
-      `Avalie esta resposta de um estudante universitário.\n\nPergunta: ${q}\n\nResposta do aluno: ${ans}\n\nContexto do material de estudo: ${ctx}\n\nRetorne JSON: {"nota":7,"acertos":"o que o aluno acertou","melhorar":"o que pode melhorar","resposta_correta":"resposta completa e correta"}`,
-      'Você é um professor universitário avaliador. Seja justo e construtivo. Responda SOMENTE em JSON válido.'
+    const {data:pdfs}=await sb.from('pdfs').select('texto_extraido').eq('materia_id',currentMateria.id);
+    const ctx=(pdfs||[]).map(p=>p.texto_extraido).join('\n\n').slice(0,8000);
+    const t=await callAI(
+      `Escreva um texto de estudo detalhado (250-300 palavras) sobre "${top.titulo}" da matéria "${currentMateria.nome}". Seja claro e didático para um estudante universitário.\n\nContexto:\n${ctx}`,
+      'Você é um professor universitário. Responda em texto corrido, sem JSON, sem markdown.'
     );
-    const fb   = JSON.parse(t.replace(/```json|```/g,'').trim());
-    const nota = Math.round(Number(fb.nota) || 0);
-    const cls  = nota >= 8 ? 'nota-hi' : nota >= 5 ? 'nota-mid' : 'nota-lo';
-    const fbEl = document.getElementById(`fb-${currentDiff}-${i}`);
-    fbEl.innerHTML = `
-      <div class="nota-badge ${cls}">${nota} / 10</div>
-      <div class="fb-text">
-        <span class="fb-label">O que você acertou:</span> ${fb.acertos || '—'}<br><br>
-        <span class="fb-label">O que pode melhorar:</span> ${fb.melhorar || '—'}
-        ${nota < 9 ? `<br><br><span class="fb-label">Resposta completa:</span> ${fb.resposta_correta || '—'}` : ''}
-      </div>`;
-    fbEl.classList.add('show');
-    btn.textContent = '✓ Avaliado';
+    top.resumo_expandido=t; top._expandido=true;
+    await sb.from('topicos').update({resumo_expandido:t}).eq('id',id);
+    renderTopicoConteudo(top);
   } catch(e) {
-    btn.disabled = false;
-    btn.textContent = 'Tentar novamente';
-    if (e.message === 'no_key') alert('Configure sua chave de API Claude na barra lateral!');
+    if(btn){btn.disabled=false;btn.textContent='Tentar novamente';}
+    console.error('Erro ao expandir tópico:',e);
   }
 }
 
-// ══════════════════════════════════════
 // ADMIN
-// ══════════════════════════════════════
 async function loadAdminData() {
-  const { data: profiles } = await sb.from('profiles').select('*').order('created_at', { ascending: true });
-  const { data: setting  } = await sb.from('settings').select('value').eq('key','pix_key').single();
-
-  if (setting?.value) document.getElementById('pix-key-field').value = setting.value;
-
-  const total   = profiles?.length || 0;
-  const active  = profiles?.filter(p => p.active).length || 0;
-  const pending = total - active;
-
-  document.getElementById('stat-total').textContent   = total;
-  document.getElementById('stat-active').textContent  = active;
-  document.getElementById('stat-revenue').textContent = `≈ R$ ${(active * 15).toLocaleString('pt-BR')}/mês`;
-  document.getElementById('stat-pending').textContent = pending;
-
-  const tbody = document.getElementById('users-tbody');
-  if (!profiles?.length) {
-    tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--muted);padding:2rem">Nenhum usuário cadastrado ainda</td></tr>';
-    return;
-  }
-  tbody.innerHTML = profiles.map((p, index) => {
-    const isAdmin = p.email === ADMIN_EMAIL;
-    const num = index + 1;
+  const {data:profiles}=await sb.from('profiles').select('*').order('created_at',{ascending:true});
+  const {data:setting}=await sb.from('settings').select('value').eq('key','pix_key').single();
+  if(setting?.value) document.getElementById('pix-key-field').value=setting.value;
+  const total=profiles?.length||0;
+  const active=profiles?.filter(p=>p.active).length||0;
+  document.getElementById('stat-total').textContent=total;
+  document.getElementById('stat-active').textContent=active;
+  document.getElementById('stat-revenue').textContent=`≈ R$ ${(active*15).toLocaleString('pt-BR')}/mês`;
+  document.getElementById('stat-pending').textContent=total-active;
+  const tbody=document.getElementById('users-tbody');
+  if(!profiles?.length){tbody.innerHTML='<tr><td colspan="6" style="text-align:center;color:var(--muted);padding:2rem">Nenhum usuário ainda</td></tr>';return;}
+  tbody.innerHTML=profiles.map((p,i)=>{
+    const isAdmin=p.email===ADMIN_EMAIL;
+    const statusTag=p.active?'<span class="tag tag-green">● Ativo</span>':p.blocked?'<span class="tag tag-red">● Bloqueado</span>':'<span class="tag tag-yellow">● Pendente</span>';
     return `<tr>
-      <td style="color:var(--muted2);font-size:12px;font-weight:600;font-family:'Syne',sans-serif">#${num}</td>
-      <td>
-        <div style="font-weight:500">${p.name || '—'}</div>
-        <div style="font-size:11px;color:var(--muted);margin-top:2px">${p.email}</div>
-      </td>
-      <td>${isAdmin
-        ? '<span class="tag tag-accent">Admin</span>'
-        : '<span class="tag tag-blue">Aluno</span>'
-      }</td>
+      <td style="color:var(--muted2);font-size:12px;font-weight:600;font-family:'Syne',sans-serif">#${i+1}</td>
+      <td><div style="font-weight:500">${p.name||'—'}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${p.email}</div></td>
+      <td>${isAdmin?'<span class="tag tag-accent">Admin</span>':'<span class="tag tag-blue">Aluno</span>'}</td>
       <td style="color:var(--muted)">${new Date(p.created_at).toLocaleDateString('pt-BR')}</td>
-      <td>${p.active
-        ? '<span class="tag tag-green">● Ativo</span>'
-        : '<span class="tag tag-yellow">● Pendente</span>'
-      }</td>
-      <td>
-        ${isAdmin
-          ? '<span style="font-size:11px;color:var(--muted2)">—</span>'
-          : `<div style="display:flex;gap:6px;align-items:center">
-              <button class="toggle-btn ${p.active ? 'toggle-on' : 'toggle-off'}"
-                onclick="toggleUser('${p.id}', ${p.active})">
-                ${p.active ? 'Bloquear' : 'Ativar'}
-              </button>
-              <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)"
-                data-id="${p.id}"
-                data-name="${(p.name||'').replace(/"/g,'&quot;')}"
-                data-email="${p.email.replace(/"/g,'&quot;')}"
-                data-active="${p.active}"
-                onclick="openEditModalFromBtn(this)">
-                Editar
-              </button>
-            </div>`
-        }
+      <td>${statusTag}</td>
+      <td>${isAdmin?'<span style="font-size:11px;color:var(--muted2)">—</span>':`
+        <div style="display:flex;gap:6px">
+          <button class="toggle-btn ${p.active?'toggle-on':'toggle-off'}" onclick="toggleUser('${p.id}',${p.active})">${p.active?'Bloquear':'Ativar'}</button>
+          <button class="toggle-btn" style="background:var(--info-dim);color:var(--info)" data-id="${p.id}" data-name="${(p.name||'').replace(/"/g,'&quot;')}" data-email="${p.email}" data-active="${p.active}" onclick="openEditModalFromBtn(this)">Editar</button>
+        </div>`}
       </td>
     </tr>`;
   }).join('');
 }
-
-async function toggleUser(id, currentActive) {
-  const nowActive  = !currentActive;
-  const nowBlocked = !nowActive;
-  await sb.from('profiles').update({ active: nowActive, blocked: nowBlocked }).eq('id', id);
+async function toggleUser(id,cur) {
+  const nowActive=!cur;
+  await sb.from('profiles').update({active:nowActive,blocked:!nowActive}).eq('id',id);
   loadAdminData();
 }
-
 function openEditModalFromBtn(btn) {
-  const id     = btn.getAttribute('data-id');
-  const name   = btn.getAttribute('data-name');
-  const email  = btn.getAttribute('data-email');
-  const active = btn.getAttribute('data-active') === 'true';
-  openEditModal(id, name, email, active);
+  openEditModal(btn.getAttribute('data-id'),btn.getAttribute('data-name'),btn.getAttribute('data-email'),btn.getAttribute('data-active')==='true');
 }
-
-function openEditModal(id, name, email, active) {
-  document.getElementById('edit-user-id').value = id;
-  document.getElementById('edit-user-name').value = name;
-  document.getElementById('edit-user-email').value = email;
-  document.getElementById('edit-user-pass').value = '';
-  document.getElementById('edit-user-status').value = active ? 'true' : 'false';
-  document.getElementById('edit-modal-msg').textContent = '';
+function openEditModal(id,name,email,active) {
+  document.getElementById('edit-user-id').value=id;
+  document.getElementById('edit-user-name').value=name;
+  document.getElementById('edit-user-email').value=email;
+  document.getElementById('edit-user-status').value=active?'true':'false';
+  document.getElementById('edit-modal-msg').textContent='';
   document.getElementById('edit-modal').classList.add('open');
-  setTimeout(() => document.getElementById('edit-user-name').focus(), 50);
+  setTimeout(()=>document.getElementById('edit-user-name').focus(),50);
 }
-
-function closeEditModal() {
-  document.getElementById('edit-modal').classList.remove('open');
-}
-
+function closeEditModal(){document.getElementById('edit-modal').classList.remove('open');}
 async function saveEditUser() {
-  const id      = document.getElementById('edit-user-id').value;
-  const name    = document.getElementById('edit-user-name').value.trim();
-  const email   = document.getElementById('edit-user-email').value.trim();
-  const active  = document.getElementById('edit-user-status').value === 'true';
-  const blocked = !active;
-  const msg     = document.getElementById('edit-modal-msg');
-  const btn     = document.getElementById('btn-save-user');
-
-  if (!name || !email) { msg.style.color = 'var(--danger)'; msg.textContent = 'Nome e e-mail são obrigatórios.'; return; }
-
-  btn.disabled = true; btn.textContent = 'Salvando...'; msg.textContent = '';
-
-  const { error } = await sb.from('profiles').update({ name, email, active, blocked }).eq('id', id);
-
-  if (error) {
-    msg.style.color = 'var(--danger)';
-    msg.textContent = 'Erro ao salvar: ' + error.message;
-    btn.disabled = false; btn.textContent = 'Salvar';
-    return;
-  }
-
-  msg.style.color = 'var(--success)';
-  msg.textContent = '✓ Dados atualizados com sucesso!';
-  btn.textContent = '✓ Salvo';
-  setTimeout(() => { closeEditModal(); loadAdminData(); }, 1200);
+  const id=document.getElementById('edit-user-id').value;
+  const name=document.getElementById('edit-user-name').value.trim();
+  const email=document.getElementById('edit-user-email').value.trim();
+  const active=document.getElementById('edit-user-status').value==='true';
+  const msg=document.getElementById('edit-modal-msg');
+  const btn=document.getElementById('btn-save-user');
+  if(!name||!email){msg.style.color='var(--danger)';msg.textContent='Nome e e-mail são obrigatórios.';return;}
+  btn.disabled=true;btn.textContent='Salvando...';
+  const {error}=await sb.from('profiles').update({name,email,active,blocked:!active}).eq('id',id);
+  if(error){msg.style.color='var(--danger)';msg.textContent='Erro: '+error.message;btn.disabled=false;btn.textContent='Salvar';return;}
+  msg.style.color='var(--success)';msg.textContent='✓ Salvo!';btn.textContent='✓';
+  setTimeout(()=>{closeEditModal();loadAdminData();},1000);
 }
-
 async function savePixKey() {
-  const val = document.getElementById('pix-key-field').value.trim();
-  if (!val) return;
-  await sb.from('settings').upsert({ key: 'pix_key', value: val });
-  alert('Chave Pix salva! Novos usuários verão essa chave na tela de pagamento.');
+  const val=document.getElementById('pix-key-field').value.trim();
+  if(!val) return;
+  await sb.from('settings').upsert({key:'pix_key',value:val});
+  alert('Chave Pix salva!');
 }
-
 function openNewUserModal() {
-  document.getElementById('new-user-name').value = '';
-  document.getElementById('new-user-email').value = '';
-  document.getElementById('new-user-pass').value = '';
-  document.getElementById('user-modal-msg').textContent = '';
+  ['new-user-name','new-user-email','new-user-pass'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('user-modal-msg').textContent='';
   document.getElementById('user-modal').classList.add('open');
-  setTimeout(() => document.getElementById('new-user-name').focus(), 50);
+  setTimeout(()=>document.getElementById('new-user-name').focus(),50);
 }
-
-function closeUserModal() {
-  document.getElementById('user-modal').classList.remove('open');
-}
-
+function closeUserModal(){document.getElementById('user-modal').classList.remove('open');}
 async function createUser() {
-  const name  = document.getElementById('new-user-name').value.trim();
-  const email = document.getElementById('new-user-email').value.trim();
-  const pass  = document.getElementById('new-user-pass').value.trim();
-  const msg   = document.getElementById('user-modal-msg');
-
-  if (!name || !email || !pass) { msg.style.color = 'var(--danger)'; msg.textContent = 'Preencha todos os campos.'; return; }
-  if (pass.length < 6) { msg.style.color = 'var(--danger)'; msg.textContent = 'Senha precisa ter ao menos 6 caracteres.'; return; }
-
-  const btn = document.getElementById('btn-create-user');
-  btn.disabled = true; btn.textContent = 'Cadastrando...';
-  msg.textContent = '';
-
+  const name=document.getElementById('new-user-name').value.trim();
+  const email=document.getElementById('new-user-email').value.trim();
+  const pass=document.getElementById('new-user-pass').value.trim();
+  const msg=document.getElementById('user-modal-msg');
+  const btn=document.getElementById('btn-create-user');
+  if(!name||!email||!pass){msg.style.color='var(--danger)';msg.textContent='Preencha todos os campos.';return;}
+  if(pass.length<6){msg.style.color='var(--danger)';msg.textContent='Senha deve ter ao menos 6 caracteres.';return;}
+  btn.disabled=true;btn.textContent='Cadastrando...';msg.textContent='';
   try {
-    const { data, error } = await sb.auth.signUp({ email, password: pass, options: { data: { name } } });
-    if (error) throw new Error(error.message);
-    await sb.from('profiles').upsert({ id: data.user.id, email, name, active: true });
-    msg.style.color = 'var(--success)';
-    msg.textContent = '✓ Aluno cadastrado com acesso ativo!';
-    btn.textContent = '✓ Cadastrado';
-    setTimeout(() => { closeUserModal(); loadAdminData(); }, 1500);
-  } catch(e) {
-    msg.style.color = 'var(--danger)';
-    msg.textContent = 'Erro: ' + e.message;
-    btn.disabled = false; btn.textContent = 'Cadastrar';
-  }
+    const {data,error}=await sb.auth.signUp({email,password:pass,options:{data:{name}}});
+    if(error) throw new Error(error.message);
+    await sb.from('profiles').upsert({id:data.user.id,email,name,active:true,blocked:false});
+    msg.style.color='var(--success)';msg.textContent='✓ Aluno cadastrado!';btn.textContent='✓';
+    setTimeout(()=>{closeUserModal();loadAdminData();},1500);
+  } catch(e){msg.style.color='var(--danger)';msg.textContent='Erro: '+e.message;btn.disabled=false;btn.textContent='Cadastrar';}
 }
 </script>
 </body>
